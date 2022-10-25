@@ -1,0 +1,10 @@
+dataset,distribution,fit_type,lower_tail,sigma_est,sigma_lower,sigma_upper,disp_est,disp_lower,disp_upper,return_time,event_magnitude,gmst_now,pr_est_x,pr_lower_x,pr_upper_x,DI_est_x,DI_lower_x,DI_upper_x,gmst,pr_est_y,pr_lower_y,pr_upper_y,DI_est_y,DI_lower_y,DI_upper_y
+AFR-22_rs_duration_MOHC-HadGEM2-ES_r1i1p1_CLMcom-KIT-CCLM5-0-15,gauss,shift,True,20.899,15.522,25.131,,,,3,96.644,1.2,0.65416,0.31213,1.1126,9.382,-2.809,21.464,2,1.202,0.96796,1.6059,-3.19,-6.875,0.636
+AFR-22_rs_duration_MOHC-HadGEM2-ES_r1i1p1_GERICS-REMO2015,gauss,shift,True,14.515,10.069,17.575,,,,3,89.585,1.2,0.76823,0.25477,1.4918,3.77,-6.112,15.157,2,1.1683,0.91876,1.7216,-1.91,-5.161,1.131
+AFR-22_rs_duration_MOHC-HadGEM2-ES_r1i1p1_ICTP-RegCM4-7,gauss,shift,True,19.205,14.376,22.884,,,,3,67.506,1.2,0.58781,0.19698,1.0037,11.021,-0.098,23.433,2,1.0856,0.89721,1.4078,-1.238,-4.187,1.79
+AFR-22_rs_duration_MPI-M-MPI-ESM-LR_r1i1p1_CLMcom-KIT-CCLM5-0-15,gauss,shift,True,21.469,17.169,24.685,,,,3,74.746,1.2,1.2869,0.52203,2.655,-4.264,-17.866,9.138,2,1.033,0.83564,1.3662,-0.581,-4.682,3.736
+AFR-22_rs_duration_MPI-M-MPI-ESM-LR_r1i1p1_GERICS-REMO2015,gauss,shift,True,15.272,10.767,18.352,,,,3,81.482,1.2,0.93224,0.29682,3.0387,1.052,-16.803,15.808,2,1.3791,0.98128,2.3241,-4.542,-9.411,0.301
+AFR-22_rs_duration_MPI-M-MPI-ESM-MR_r1i1p1_ICTP-RegCM4-7,gauss,shift,True,13.64,10.945,15.442,,,,3,52.645,1.2,1.7818,0.4478,7.2696,-6.152,-18.463,7.531,2,0.75852,0.60517,1.008,3.775,-0.094,7.134
+AFR-22_rs_duration_NCC-NorESM1-M_r1i1p1_CLMcom-KIT-CCLM5-0-15,gauss,shift,True,16.605,11.905,19.986,,,,3,78.529,1.2,0.46503,0.1998,0.85488,18.912,4.116,34.483,2,0.98121,0.76097,1.3972,0.371,-5.589,6.107
+AFR-22_rs_duration_NCC-NorESM1-M_r1i1p1_GERICS-REMO2015,gauss,shift,True,22.927,18.28,26.247,,,,3,83.231,1.2,0.38734,0.16589,0.73769,34.403,10.868,57.983,2,1.1095,0.78068,1.7666,-2.22,-10.4,5.498
+AFR-22_rs_duration_NCC-NorESM1-M_r1i1p1_ICTP-RegCM4-7,gauss,shift,True,11.701,9.357,13.301,,,,3,46.46,1.2,0.4705,0.16761,1.0538,11.367,-0.905,23.782,2,1.3214,0.96982,2.0488,-2.908,-6.336,0.354

@@ -1,0 +1,10 @@
+dataset,distribution,fit_type,lower_tail,sigma_est,sigma_lower,sigma_upper,disp_est,disp_lower,disp_upper,return_time,event_magnitude,gmst_now,pr_est_x,pr_lower_x,pr_upper_x,DI_est_x,DI_lower_x,DI_upper_x,gmst,pr_est_y,pr_lower_y,pr_upper_y,DI_est_y,DI_lower_y,DI_upper_y
+AFR-22_rs_onset_MOHC-HadGEM2-ES_r1i1p1_CLMcom-KIT-CCLM5-0-15,gauss,shift,False,11.913,7.646,15.316,,,,3,169.63,1.2,0.99021,0.50627,2.0055,-0.119,-7.494,6.971,2,1.0321,0.84085,1.2762,0.355,-1.814,2.548
+AFR-22_rs_onset_MOHC-HadGEM2-ES_r1i1p1_GERICS-REMO2015,gauss,shift,False,8.943,6.723,10.576,,,,3,174.2,1.2,0.87072,0.38061,1.6163,-1.186,-6.588,4.33,2,1.2715,0.99649,1.9278,1.874,-0.031,3.873
+AFR-22_rs_onset_MOHC-HadGEM2-ES_r1i1p1_ICTP-RegCM4-7,gauss,shift,False,17.624,9.483,23.39,,,,3,194.56,1.2,0.61669,0.25626,1.1285,-10.019,-26.06,2.284,2,1.1657,0.93359,1.4747,2.229,-1.031,5.49
+AFR-22_rs_onset_MPI-M-MPI-ESM-LR_r1i1p1_CLMcom-KIT-CCLM5-0-15,gauss,shift,False,17.355,13.899,19.592,,,,3,193.46,1.2,1.417,0.57005,3.1366,5.021,-7.04,15.843,2,1.0163,0.82235,1.365,0.257,-3.412,4.165
+AFR-22_rs_onset_MPI-M-MPI-ESM-LR_r1i1p1_GERICS-REMO2015,gauss,shift,False,14.895,10.15,18.42,,,,3,181.93,1.2,0.53736,0.19823,1.2296,-10.52,-24.219,3.741,2,1.5992,1.1099,2.804,5.558,1.464,9.59
+AFR-22_rs_onset_MPI-M-MPI-ESM-MR_r1i1p1_ICTP-RegCM4-7,gauss,shift,False,11.962,8.493,14.444,,,,3,212.34,1.2,2.5774,0.64965,14.764,7.816,-3.27,19.602,2,0.8056,0.62968,1.1126,-2.466,-5.436,1.004
+AFR-22_rs_onset_NCC-NorESM1-M_r1i1p1_CLMcom-KIT-CCLM5-0-15,gauss,shift,False,20.125,15.752,23.044,,,,3,173.42,1.2,0.688,0.24414,1.5836,-7.624,-24.437,9.625,2,0.78586,0.62495,1.1192,-5.347,-12.635,1.827
+AFR-22_rs_onset_NCC-NorESM1-M_r1i1p1_GERICS-REMO2015,gauss,shift,False,25.478,21.125,28.012,,,,3,175.64,1.2,0.61828,0.18936,1.8306,-14.316,-46.443,16.497,2,0.91286,0.67467,1.3534,-2.233,-10.279,6.443
+AFR-22_rs_onset_NCC-NorESM1-M_r1i1p1_ICTP-RegCM4-7,gauss,shift,False,36.03,26.952,41.189,,,,3,202.58,1.2,1.0588,0.29073,3.2829,1.88,-38.49,35.686,2,0.79889,0.62466,1.0581,-7.282,-15.954,1.625

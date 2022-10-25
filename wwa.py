@@ -1,9 +1,25 @@
+
+## IMPORT NECESSARY MODULES
+
 import xarray as xr; xr.set_options(keep_attrs = True)
 import pandas as pd
 import numpy as np
 
+import cartopy
+import geopandas as gpd
+import regionmask
+from geopy.geocoders import Nominatim
+
+import re
+import glob
+
 import matplotlib.pyplot as plt
-import matplotlib; matplotlib.rcParams['savefig.bbox'] = "tight"    # always save with tight bounding box
+import matplotlib
+matplotlib.rcParams['savefig.bbox'] = "tight"    # always save with tight bounding box
+matplotlib.rcParams["savefig.facecolor"] = "w"   # always save with white (rather than transparent) background
+
+import warnings
+warnings.filterwarnings("ignore", message = "facecolor will have no effect.+")         # warning about change to Cartopy plotting defaults
 
 ###############################################################################################################
 ## METHODS FOR EXTRACTING USEFUL INFORMATION FROM RESULTS FILES
@@ -13,7 +29,7 @@ def clean_line(l): return re.sub(" +", " ", re.sub("\\.\\.\\.", "", re.sub("<.+?
 def read_results(fnm): 
     
     # initialise a couple of empty variables
-    mu_prime = []; sigma_prime = []; disp = [None, None, None]; y_start = ""; y_end = ""
+    mu_prime = []; sigma_prime = []; disp = [None, None, None]; y_start = ""; y_end = ""; fitted_rp = ""
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # identify type of analysis carried out
@@ -52,6 +68,7 @@ def read_results(fnm):
     y = opts["year"]
     if "begin" in opts.keys(): y_start = opts["begin"]
     if "end" in opts.keys(): y_end = opts["end"]
+    if "biasrt" in opts.keys(): fitted_rp = opts["biasrt"]
         
     covariate_matched = (covariate_file.split(" ")[2] in opts["station"]) and (covariate_file.split(" ")[4] in opts["station"])
     
@@ -76,7 +93,7 @@ def read_results(fnm):
                          "N" : N,
                          "event_year" : opts["year"],
                          "vs_gmst" : opts["cov1"],
-                         "return_time" : opts["biasrt"],
+                         "return_time" : fitted_rp,
                          "sigma_est" : sigma_prime[0],
                          "sigma_lower" : sigma_prime[1],
                          "sigma_upper" : sigma_prime[2],
@@ -103,6 +120,30 @@ def read_results(fnm):
 ###############################################################################################################
 ## MISC
 
+def wrap_lon(ds):
+    
+    # method to wrap longitude from (0,360) to (-180,180)
+    
+    if "longitude" in ds.coords:
+        lon = "longitude"
+        lat = "latitude"
+    elif "lon" in ds.coords:
+        lon = "lon"
+        lat = "lat"
+    else: 
+        # can only wrap longitude
+        return ds
+    
+    if ds[lon].max() > 180:
+        ds[lon] = (ds[lon].dims, (((ds[lon].values + 180) % 360) - 180), ds[lon].attrs)
+        
+    if lon in ds.dims:
+        ds = ds.reindex({ lon : np.sort(ds[lon]) })
+        ds = ds.reindex({ lat : np.sort(ds[lat]) })
+    return ds
+
+
+
 def decode_times(ts):
     
     # Method to manually decode times
@@ -119,5 +160,53 @@ def decode_times(ts):
     ts = ts.assign_coords(time = new_times)
     
     return ts
+
+
+
+def get_latlon(city):
+    
+    # retrieve lat & lon for given location
+    location = Nominatim(user_agent="GetLoc").geocode(city)
+    if location is None:
+        return {"lon" : None, "lat" : None}
+    else:
+        return {"lon" : location.longitude, "lat" : location.latitude}
+
+
+# def cx_csv(da, fnm = None, dataset = None):
+    
+#     # write CSV for easy import into Climate Explorer
+    
+#     rnm = da.run.values[0]
+#     da = da.squeeze(drop = True)
+#     fnm_string = da.name+"_"+re.sub(" ", "_", rnm)
+    
+#     if dataset is not None:
+#         fnm_string = dataset+"_"+fnm_string
+        
+#     if fnm is None:
+#         fnm = "ts/"+fnm_string
+    
+#     if "time" in da.dims:
+#         da = da.assign_coords(time = da.time.dt.year).rename(time = "#time")
+#     elif "year" in da.dims:
+#         da = da.rename(year = "#time")
+#     else:
+#         print(da.dims)
+#         return
+
+#     # write to csv
+#     fnm = re.sub(".txt", "", fnm)+".txt"
+#     da.to_dataframe().to_csv(fnm, sep = " ")
+    
+#     # add a text string specifying the units (don't think format is correct here)
+#     if "units" in da.attrs:
+#         unit_string = "# "+da.name+" ["+da.units+"]"
+#         unit_string = "# variable ["+da.units+"]"
+#         ! echo "$unit_string" >> $fnm
+    
+#     # add a line specifying the model & variable name, to be used as filename when uploading
+#     fnm_string = "# "+fnm_string
+#     ! echo "$fnm_string" >> $fnm
 
 ###############################################################################################################

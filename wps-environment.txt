@@ -1,0 +1,16 @@
+To set up conda environment for WPS to access data on ESGF servers:
+
+conda create --name wps -y
+conda activate wps
+
+conda install esgf-pyclient defusedxml MyProxyClient dask xarray matplotlib ipykernel netcdf4 -y
+
+conda install ipykernel -y
+ipython kernel install --user --name=wps
+
+
+
+
+# could probably do with modifying this to use xclim, xesmf, regionmask, geopandas etc - but this may require removing the environment & reconstructing from scratch (think xesmf may need to be installed before other packages?)
+
+# had to reinstall netcdf4 in order to actually open data for some reason

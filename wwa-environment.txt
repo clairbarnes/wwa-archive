@@ -1,0 +1,27 @@
+To set up conda environment for WWA analysis:
+
+conda create --name wwa -y
+conda activate wwa
+
+conda install -y -c conda-forge r-base
+conda install -y xarray netcdf4 matplotlib scipy ipykernel
+
+# in R, install.packages("climextRemes")
+
+pip install climextremes
+
+ipython kernel install --user --name=wwa
+
+
+
+
+# have now also added regionmask - would be useful to add xesfm & xclim, and to combine with wps
+# also cartopy, rasterio, xclim, fiona
+# geopy for adding coordinates by place name
+
+
+# suggested initial setup for WPS and netcdf processing:
+conda install esgf-pyclient defusedxml MyProxyClient dask xarray netcdf4 matplotlib scipy xclim regionmask cartopy rasterio fiona geopandas ipykernel -y
+
+# suggested setup for R processing:
+conda install r r-devtools r-irkernel jupyter_client

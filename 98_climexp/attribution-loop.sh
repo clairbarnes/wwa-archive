@@ -8,7 +8,6 @@
 
     # invert future values
     # are extra parameters needed for other distributions?
-    # adjust headers according to whether or not values actually exist (eg when to use dispersion/sigma)
     
 ####################################################################################################################################
 # EXTERNAL ARGUMENTS (PASSED FROM WRAPPER)
@@ -152,11 +151,27 @@ proj_headers=`echo "f_pr_est f_pr_lower f_pr_upper f_di_est f_di_lower f_di_uppe
 proj_params=`echo ${pr_fut} ${DeltaI_fut} ${dispersion_fut} ${alpha_fut}`
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Invert future parameters
+
+fpr=($pr_fut)
+fpr_est_i=`echo "1 / ${fpr[0]}" | bc -l`
+fpr_lower_i=`echo "1 / ${fpr[2]}" | bc -l`
+fpr_upper_i=`echo "1 / ${fpr[1]}" | bc -l`
+
+fdi=($DeltaI_fut)
+fdi_est_i=`echo "0 - ${fdi[0]}" | bc -l`
+fdi_lower_i=`echo "0 - ${fdi[2]}" | bc -l`
+fdi_upper_i=`echo "0 - ${fdi[1]}" | bc -l`
+
+proj_headers_inverted="f_pr_est_i f_pr_lower_i f_pr_upper_i f_di_est_i f_di_lower_i f_di_upper_i"
+proj_params_inverted=`echo ${fpr_est_i} ${fpr_lower_i} ${fpr_upper_i} ${fdi_est_i} ${fdi_lower_i} ${fdi_upper_i}`
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 ## WRITE HEADERS & RESULTS TO FILE
 
-header_line=`echo run gmst_file ${eval_headers} ${attr_headers} ${proj_headers}`
+header_line=`echo run gmst_file ${eval_headers} ${attr_headers} ${proj_headers} ${proj_headers_inverted}`
 echo $header_line >> $tmp_header_file
 
-model_line=`echo ${model_fnm} ${gmst_fnm} ${eval_params} ${attr_params} ${proj_params}`
+model_line=`echo ${model_fnm} ${gmst_fnm} ${eval_params} ${attr_params} ${proj_params} ${proj_params_inverted}`
 echo $model_line >> $tmp_result_file
 

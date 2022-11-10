@@ -48,4 +48,4 @@ cat tmp_headers.txt > $results_file
 cat tmp_results.txt >> $results_file
 
 # remove temporary files
-# rm tmp_headers.txt tmp_results.txt model_eval.log model_attr.log model_proj.log
+rm tmp_headers.txt tmp_results.txt model_eval.log model_attr.log model_proj.log

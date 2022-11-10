@@ -5,6 +5,13 @@ import xarray as xr; xr.set_options(keep_attrs = True)
 import pandas as pd
 import numpy as np
 
+from xclim.core.units import convert_units_to
+from xclim.core.calendar import convert_calendar
+
+from scipy.stats import norm, gamma, gaussian_kde
+
+import os; os.environ['PROJ_LIB'] = '/home/clair/miniconda3/envs/wwa/share/proj'                         # fixes error message on import of cartopy etc
+
 import cartopy
 import geopandas as gpd
 import regionmask
@@ -12,6 +19,7 @@ from geopy.geocoders import Nominatim
 
 import re
 import glob
+from dateutil.relativedelta import relativedelta
 
 import matplotlib.pyplot as plt
 import matplotlib
@@ -19,7 +27,31 @@ matplotlib.rcParams['savefig.bbox'] = "tight"    # always save with tight boundi
 matplotlib.rcParams["savefig.facecolor"] = "w"   # always save with white (rather than transparent) background
 
 import warnings
-warnings.filterwarnings("ignore", message = "facecolor will have no effect.+")         # warning about change to Cartopy plotting defaults
+warnings.filterwarnings("ignore", message = "facecolor will have no effect.+")                           # warning about change to Cartopy plotting defaults
+warnings.filterwarnings("ignore", message = "__len__ for multi-part geometries is deprecated.+")         # warning about change to Shapely defaults
+warnings.filterwarnings("ignore", message = ".+Results from 'centroid' are likely incorrect.+")            # warning against using centroids without reprojecting
+
+###############################################################################################################
+## GOODNESS OF FIT
+
+def qqplot(ts, ax = None, dist = norm, marker = ".", ax_labels = True, **kwargs): 
+    
+    ts = ts[np.isfinite(ts)] 
+    x = np.arange(0,1,1/(len(ts)+1))[1:]
+    fitted = dist.fit(ts)
+    
+    if ax is None:
+        fig, ax = plt.subplots(figsize = (5,5), dpi = 100, facecolor = "w")
+        
+    ax.scatter(dist.ppf(x, *fitted), sorted(ts), marker = marker, **kwargs)
+    
+    vmin = min([ts.min(), dist.ppf(x, *fitted).min()])
+    vmax = max([ts.max(), dist.ppf(x, *fitted).max()])
+    ax.plot((vmin, vmax), (vmin, vmax), ls = "--", color = "k")
+    
+    if ax_labels:
+        ax.set_xlabel("Fitted"); ax.set_ylabel("Observed")
+        
 
 ###############################################################################################################
 ## METHODS FOR EXTRACTING USEFUL INFORMATION FROM RESULTS FILES
@@ -49,6 +81,7 @@ def read_results(fnm):
         # options used to run analysis (mainly for checking purposes)
         if "scripturl02" in line: opts = {s.split("=")[0].lower() : s.split("=")[1] for s in line.split("&")}
         if "covariate_description" in line: covariate_file = re.sub(".+:: ", "", line)
+        if "covariate_file" in line: covariate_file = re.sub(".+:: ", "", line)
         if ">N:<" in line: N = re.sub("\D+", "", line)
         
         # parameter estimates & ranges
@@ -117,6 +150,22 @@ def read_results(fnm):
                         },
                         index = [re.sub("\\..+", "", re.sub(".+/", "", fnm))])
 
+
+###############################################################################################################
+## PLOTTING
+
+def month_xlabels(dates, ax = None):
+    
+    if ax is None: ax = plt.gca()
+    
+    labelticks = [i for i in range(366) if dates.dt.day[i] == 1]
+    labels = [dates[i].values for i in range(366) if dates.dt.day[i] == 1]
+
+    ax.set_xticks(labelticks)
+    ax.set_xticklabels(labels)
+    ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%b"))
+
+    
 ###############################################################################################################
 ## MISC
 
@@ -153,6 +202,8 @@ def decode_times(ts):
     
     if inc == "years":
         new_times = [np.datetime64(startdate + relativedelta(years = i)) for i in range(len(ts.time))]
+    elif inc == "months":
+        new_times = [np.datetime64(startdate + relativedelta(months = i)) for i in range(len(ts.time))]
     else:
         print("TBD: " +inc)
         return
@@ -173,6 +224,23 @@ def get_latlon(city):
         return {"lon" : location.longitude, "lat" : location.latitude}
 
 
+def normalised_seasonal_cycle(ts):
+    
+    ts = convert_calendar(ts, "default", align_on = "date")
+    sc = ts.groupby("time.dayofyear").mean()
+    return sc / sc.mean()
+
+
+def eval_df(ens, region = None):
+    # create an empty DataFrame to store evaluation results
+    if fnm is None: 
+        fnm = ens+"_model-eval.txt"
+    else:
+        fnm = ens+"_"+region+"_model-eval.txt"
+    pd.DataFrame({"seasonal_cycle" : "?", "spatial_pattern" : "?"}, index = [cordex_model(fnm) for fnm in glob.glob("cordex/pr-spatial_"+ens+"_*")]).to_csv(fnm)
+    
+    
+###############################################################################################################
 # def cx_csv(da, fnm = None, dataset = None):
     
 #     # write CSV for easy import into Climate Explorer
@@ -208,5 +276,37 @@ def get_latlon(city):
 #     # add a line specifying the model & variable name, to be used as filename when uploading
 #     fnm_string = "# "+fnm_string
 #     ! echo "$fnm_string" >> $fnm
+
+###############################################################################################################
+## LISTS OF CORDEX MODELS
+
+gcm = {'CCCma-CanESM2' : "CanESM2",
+       'CNRM-CERFACS-CNRM-CM5' : "CNRM-CM5",
+       'CSIRO-QCCCE-CSIRO-Mk3-6-0' : "CSIRO-Mk3-6-0",
+       'ICHEC-EC-EARTH' : "EC-EARTH",
+       'IPSL-IPSL-CM5A-LR' : "IPSL-CM5A-LR",
+       'IPSL-IPSL-CM5A-MR' : "IPSL-CM5A-MR",
+       'MIROC-MIROC5' : "MIROC5",
+       'MOHC-HadGEM2-ES' : "HadGEM2-ES",
+       'MPI-M-MPI-ESM-LR' : "MPI-ESM-LR",
+       'MPI-M-MPI-ESM-MR' : "MPI-ESM-MR",
+       'NCC-NorESM1-M' : "NorESM1-M",
+       'NOAA-GFDL-GFDL-ESM2M' : "GFDL-ESM2M"}
+
+rcm = {'CCCma-CanRCM4' : "CanRCM4",
+       'CLMcom-CCLM4-8-17' : "CCLM4-8-17",
+       'CLMcom-KIT-CCLM5-0-15' : "CCLM5-0-15",
+       'DMI-HIRHAM5' : "HIRHAM5",
+       'GERICS-REMO2009' : "REMO2009",
+       'GERICS-REMO2015' : "REMO2015",
+       'ICTP-RegCM4-3' : "RegCM4-3",
+       'ICTP-RegCM4-7' : "RegCM4-7",
+       'KNMI-RACMO22T' : "RACMO22T",
+       'MPI-CSC-REMO2009' : "REMO2009",
+       'SMHI-RCA4' : "RCA4"}
+
+# method to decode filename into model name
+def cordex_model(fnm): return gcm[fnm.split("_")[2]]+"_"+fnm.split("_")[4][:-4]+"_"+rcm[fnm.split("_")[5]]
+
 
 ###############################################################################################################

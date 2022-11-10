@@ -122,7 +122,7 @@ pr=`echo ${line#*&nbsp;</td><td>} | sed -e 's_</td><td>__g' | sed -e 's_</td></t
 
 # change in intensity
 line=`cat $attr_logfile | grep "change in intensity"`
-DeltaI=`echo ${line#*diff*?</td><td>} | sed -e 's_</td><td>__g' | sed -e 's_</td></tr>__g' | sed -e 's_\.\.\.__g' | sed -e 's/&infin;/1e6/g'`
+DeltaI=`echo ${line#*diff*</td><td>} | sed -e 's_</td><td>__g' | sed -e 's_</td></tr>__g' | sed -e 's_\.\.\.__g' | sed -e 's/&infin;/1e6/g'`
 
 attr_headers="rv rp_est rp_lower rp_upper pr_est pr_lower pr_upper di_est di_lower di_upper"
 attr_params=`echo ${rv} ${rp} ${pr} ${DeltaI}`
@@ -137,7 +137,7 @@ pr_fut=`echo ${line#*&nbsp;</td><td>} | sed -e 's_</td><td>__g' | sed -e 's_</td
 
 # change in intensity
 line=`cat $proj_logfile | grep "change in intensity"`
-DeltaI_fut=`echo ${line#*diff*?</td><td>} | sed -e 's_</td><td>__g' | sed -e 's_</td></tr>__g' | sed -e 's_\.\.\.__g' | sed -e 's/&infin;/1e6/g'`
+DeltaI_fut=`echo ${line#*diff*</td><td>} | sed -e 's_</td><td>__g' | sed -e 's_</td></tr>__g' | sed -e 's_\.\.\.__g' | sed -e 's/&infin;/1e6/g'`
 
 # dispersion
 line=`cat $proj_logfile | fgrep "&sigma;/&mu;:"`

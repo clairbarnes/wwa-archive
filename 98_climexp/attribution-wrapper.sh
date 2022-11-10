@@ -11,7 +11,7 @@ model_list=p_lower-niger_7daymax_NorESM1-M_r1_RegCM4-7:tas_Amon_NorESM1-M_rcp85_
 #`echo p_lower-niger_7daymax_NorESM1-M_r1_RegCM4-7:tas_Amon_NorESM1-M_rcp85_r1i1p1 p_lower-niger_7daymax_EC-EARTH_r12_REMO2009:tas_Amon_NorESM1-M_rcp85_r1i1p1 p_lower-niger_7daymax_HadGEM2-ES_r1_RegCM4-3:tas_Amon_NorESM1-M_rcp85_r1i1p1 p_lower-niger_7daymax_NorESM1-M_r1_CCLM5-0-15:tas_Amon_NorESM1-M_rcp85_r1i1p1 p_lower-niger_7daymax_MPI-ESM-LR_r1_REMO2009:tas_Amon_NorESM1-M_rcp85_r1i1p1 p_lower-niger_7daymax_MPI-ESM-MR_r1_RegCM4-7:tas_Amon_NorESM1-M_rcp85_r1i1p1 p_lower-niger_7daymax_MPI-ESM-MR_r1_RegCM4-3:tas_Amon_NorESM1-M_rcp85_r1i1p1 p_lower-niger_7daymax_IPSL-CM5A-LR_r1_REMO2009:tas_Amon_NorESM1-M_rcp85_r1i1p1 p_lower-niger_7daymax_HadGEM2-ES_r1_REMO2009:tas_Amon_NorESM1-M_rcp85_r1i1p1 p_lower-niger_7daymax_HadGEM2-ES_r1_REMO2015:tas_Amon_NorESM1-M_rcp85_r1i1p1 p_lower-niger_7daymax_MIROC5_r1_REMO2009:tas_Amon_NorESM1-M_rcp85_r1i1p1`
 
 # list of parameter=value pairs to use in study, separated with spaces
-parameter_list=`echo distribution=gev fit_type=shift return_period=5 obs_start=1981 event_year=2022 lower_tail=off restrain=0.4 include_event=on gmst_past=-1.2 gmst_fut=0.8 confint=95`
+parameter_list=`echo distribution=gev fit_type=scale return_period=5 obs_start=1981 event_year=2022 lower_tail=off restrain=0.4 include_event=on gmst_past=-1.2 gmst_fut=0.8 confint=95`
 
 # id of user that uploaded the data
 user_id=62f4b5a82fde776a4c64f0ca33646aa0

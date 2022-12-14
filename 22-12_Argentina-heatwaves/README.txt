@@ -1,1 +1,0 @@
-Files uploaded on December 13th 2022: CPC uses daily data up to December 10th, ERA5 uses daily data up to December 8th (inclusive). Because ERA5 therefore does not capture the whole duration of the heatwave in December 2022, this value has been provisionally replaced with the CPC value minus 1.2 degrees, to reflect the systematic offset between the two data sets.

@@ -4,13 +4,13 @@
 ####################################################################################################################################
 
 # filename for final results
-results_file=station-fit.txt
+results_file=cx_attribution-ukcp.txt
 
 # list of model:gmst pairs to loop over, separated with spaces
-model_list=`echo t_era5_tmax_1day t_era5_tmax_3day t_era5_tmax_5day t_era5_tmax_7day t_era5_tmax_9day t_cpc_tmax_1day t_cpc_tmax_3day t_cpc_tmax_5day t_cpc_tmax_7day t_cpc_tmax_9day`
+model_list=`echo t_AR-PY_tasmax-7day_UKCP-land-gcm_01:t_ukcp-land-gcm_gsat-aw_sm_01 t_AR-PY_tasmax-7day_UKCP-land-gcm_02:t_ukcp-land-gcm_gsat-aw_sm_02 t_AR-PY_tasmax-7day_UKCP-land-gcm_03:t_ukcp-land-gcm_gsat-aw_sm_03 t_AR-PY_tasmax-7day_UKCP-land-gcm_04:t_ukcp-land-gcm_gsat-aw_sm_04 t_AR-PY_tasmax-7day_UKCP-land-gcm_05:t_ukcp-land-gcm_gsat-aw_sm_05 t_AR-PY_tasmax-7day_UKCP-land-gcm_06:t_ukcp-land-gcm_gsat-aw_sm_06 t_AR-PY_tasmax-7day_UKCP-land-gcm_07:t_ukcp-land-gcm_gsat-aw_sm_07 t_AR-PY_tasmax-7day_UKCP-land-gcm_08:t_ukcp-land-gcm_gsat-aw_sm_08 t_AR-PY_tasmax-7day_UKCP-land-gcm_09:t_ukcp-land-gcm_gsat-aw_sm_09 t_AR-PY_tasmax-7day_UKCP-land-gcm_10:t_ukcp-land-gcm_gsat-aw_sm_10 t_AR-PY_tasmax-7day_UKCP-land-gcm_11:t_ukcp-land-gcm_gsat-aw_sm_11 t_AR-PY_tasmax-7day_UKCP-land-gcm_12:t_ukcp-land-gcm_gsat-aw_sm_12 t_AR-PY_tasmax-7day_UKCP-land-gcm_13:t_ukcp-land-gcm_gsat-aw_sm_13 t_AR-PY_tasmax-7day_UKCP-land-gcm_14:t_ukcp-land-gcm_gsat-aw_sm_14 t_AR-PY_tasmax-7day_UKCP-land-gcm_15:t_ukcp-land-gcm_gsat-aw_sm_15`
 
 # list of parameter=value pairs to use in study, separated with spaces
-parameter_list=`echo distribution=gev fit_type=shift event_year=2022 lower_tail= restrain=0.4 include_event=on gmst_past=-1.2 gmst_fut=0.8 confint=95 begin=1979`
+parameter_list=`echo distribution=gev fit_type=shift return_period=20 obs_start=1950 event_year=2022 lower_tail= restrain=0.4 include_event=on gmst_past=-1.2 gmst_fut=0.8 confint=95`
 
 # id of user that uploaded the data
 user_id=62f4b5a82fde776a4c64f0ca33646aa0
@@ -36,7 +36,7 @@ do
     model_fnm=`echo ${m/:*/}`
     gmst_fnm=`echo ${m/*:/}`
     
-    bash check-obs-fit_loop.sh $model_fnm $gmst_fnm "${parameter_list}" $user_id
+    bash attribution-ukcp_loop.sh $model_fnm $gmst_fnm "${parameter_list}" $user_id
 done
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -47,4 +47,4 @@ cat tmp_headers.txt > $results_file
 cat tmp_results.txt >> $results_file
 
 # remove temporary files
-rm tmp_headers.txt tmp_results.txt model_eval.log climexp_uploads.txt
+rm tmp_headers.txt tmp_results.txt model_eval.log model_attr.log model_proj.log climexp_uploads.txt

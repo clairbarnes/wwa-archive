@@ -4,13 +4,13 @@
 ####################################################################################################################################
 
 # filename for final results
-results_file=station-fit.txt
+results_file=cx_station-fit.txt
 
 # list of model:gmst pairs to loop over, separated with spaces
-model_list=`echo t_era5_tmax_1day t_era5_tmax_3day t_era5_tmax_5day t_era5_tmax_7day t_era5_tmax_9day t_cpc_tmax_1day t_cpc_tmax_3day t_cpc_tmax_5day t_cpc_tmax_7day t_cpc_tmax_9day`
+model_list=`echo t_AR-PY_tasmax-7day_station_87129 t_AR-PY_tasmax-7day_station_87078 t_AR-PY_tasmax-7day_station_87065 t_AR-PY_tasmax-7day_station_87585 t_AR-PY_tasmax-7day_station_87345 t_AR-PY_tasmax-7day_station_87244 t_AR-PY_tasmax-7day_station_87623 t_AR-PY_tasmax-7day_station_87480`
 
 # list of parameter=value pairs to use in study, separated with spaces
-parameter_list=`echo distribution=gev fit_type=shift event_year=2022 lower_tail= restrain=0.4 include_event=on gmst_past=-1.2 gmst_fut=0.8 confint=95 begin=1979`
+parameter_list=`echo distribution=gev fit_type=shift event_year=2022 lower_tail= restrain=0.4 include_event=on gmst_past=-1.2 gmst_fut=0.8 confint=95`
 
 # id of user that uploaded the data
 user_id=62f4b5a82fde776a4c64f0ca33646aa0

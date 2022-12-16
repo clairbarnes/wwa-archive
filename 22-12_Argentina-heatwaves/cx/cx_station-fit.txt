@@ -1,0 +1,10 @@
+# distribution=gev fit_type=shift event_year=2022 lower_tail= restrain=0.4 include_event=on gmst_past=-1.2 gmst_fut=0.8 confint=95
+run gmst_file sigma_est sigma_lower sigma_upper xi_est xi_lower xi_upper alpha_est alpha_lower alpha_upper rv rp_est rp_lower rp_upper pr_est pr_lower pr_upper di_est di_lower di_upper
+t_AR-PY_tasmax-7day_station_87129 t_AR-PY_tasmax-7day_station_87129 1.455 1.067 1.736 -0.111 -0.283 0.084 1.155 -0.063 2.657 42.257 15.154 5.7912 65.513 3.8982 0.93193 1210.0 1.385 -0.076 3.188
+t_AR-PY_tasmax-7day_station_87078 t_AR-PY_tasmax-7day_station_87078 1.527 1.278 1.708 -0.334 -0.580 -0.204 1.504 0.243 2.707 43.014 40.438 13.188 1e6 1e6 7.9251 1e6 1.804 0.291 3.249
+t_AR-PY_tasmax-7day_station_87065 t_AR-PY_tasmax-7day_station_87065 1.802 1.010 2.329 -0.561 -0.736 -0.100 2.295 0.470 2.932 44.286 87.567 16.837 1e6 1e6 25.729 1e6 2.754 0.564 3.519
+t_AR-PY_tasmax-7day_station_87585 t_AR-PY_tasmax-7day_station_87585 1.201 0.781 1.439 -0.221 -0.375 0.100 1.412 0.397 2.331 34.986 3.9540 2.3679 9.6747 9.5516 1.9669 187.70 1.695 0.476 2.797
+t_AR-PY_tasmax-7day_station_87345 t_AR-PY_tasmax-7day_station_87345 1.657 1.250 1.926 -0.112 -0.293 0.107 0.820 -0.526 2.284 39.100 17.201 7.8995 89.933 2.3102 0.54447 59.176 0.984 -0.631 2.740
+t_AR-PY_tasmax-7day_station_87244 t_AR-PY_tasmax-7day_station_87244 1.722 1.324 2.050 -0.089 -0.245 0.055 0.571 -1.026 2.314 39.986 15.607 6.6065 54.179 1.6568 0.41236 23.568 0.686 -1.231 2.777
+t_AR-PY_tasmax-7day_station_87623 t_AR-PY_tasmax-7day_station_87623 1.679 1.215 1.970 -0.168 -0.325 0.021 1.452 0.229 2.623 35.629 1.6589 1.2895 2.3972 2.3926 1.1522 5.9907 1.742 0.275 3.147
+t_AR-PY_tasmax-7day_station_87480 t_AR-PY_tasmax-7day_station_87480 1.444 0.969 1.723 -0.208 -0.351 0.079 1.305 0.207 2.386 36.814 8.7029 4.3287 30.503 7.4739 1.5161 822.05 1.566 0.248 2.863

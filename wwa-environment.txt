@@ -25,3 +25,7 @@ conda install esgf-pyclient defusedxml MyProxyClient dask xarray netcdf4 matplot
 
 # suggested setup for R processing:
 conda install r r-devtools r-irkernel jupyter_client
+
+
+
+conda install -y xarray netcdf4 matplotlib scipy cartopy rasterio fiona geopandas regionmask geopy

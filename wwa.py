@@ -5,6 +5,8 @@ import xarray as xr; xr.set_options(keep_attrs = True)
 import pandas as pd
 import numpy as np
 
+from functools import reduce
+
 from xclim.core.units import convert_units_to
 from xclim.core.calendar import convert_calendar
 
@@ -240,6 +242,26 @@ def eval_df(ens, region = None):
     pd.DataFrame({"seasonal_cycle" : "?", "spatial_pattern" : "?"}, index = [cordex_model(fnm) for fnm in glob.glob("cordex/pr-spatial_"+ens+"_*")]).to_csv(fnm)
     
     
+    
+def nearest_px(x,y,da, xcoord = "longitude", ycoord = "latitude"):
+   
+    # get squared distance from (x,y) to each point
+    dist2 = (da[ycoord] - y)**2 + (da[xcoord] - x)**2
+   
+    # exclude any cells where the gridded data is NaN
+    dist2 = dist2.where(~np.isnan(da))
+   
+    # also limit distance to closest two squares (in case there really is no data nearby)
+    dist2 = dist2.where(dist2 <= 5.76e8)
+   
+    # find value in cell containing minimum distance
+    # if multiple equidistant cells, will average over them
+    val = da.where(dist2 == dist2.min()).mean([xcoord, ycoord])
+   
+    return val
+
+
+
 ###############################################################################################################
 # def cx_csv(da, fnm = None, dataset = None):
     

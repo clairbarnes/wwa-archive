@@ -6,7 +6,6 @@
 
 # STILL TO DO:
 
-    # invert future values
     # are extra parameters needed for other distributions?
     
 ####################################################################################################################################
@@ -33,6 +32,10 @@ gmst_line=`cat climexp_uploads.txt | grep kalelink | grep $gmst_fnm`
 gmst_file=${gmst_line//*(/}
 gmst_file=${gmst_file//)*/}
 
+# don't change sign unless 'lower_tail' is passed as parameter
+chsign="&changesign=on"
+if [[ -z "$lower_tail" ]]; then chsign=""; fi
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # FIXED VARIABLES (temporary files used to hold output, will be deleted after processing)
 
@@ -55,16 +58,20 @@ echo "# ${par_list}" > $tmp_header_file
 # RUN MODEL EVALUATION
 
 data_script="https://climexp.knmi.nl/upload.cgi?STATION=$model_fnm&email=$id"
-eval_script="https://climexp.knmi.nl/attribute.cgi?EMAIL=$id&STATION=$model_fnm&WMO=$upload_fnm&assume=$fit_type&begin=$obs_start&biasrt=$return_period&ci=$confint&cov1=$gmst_past&dgt=80&end=$event_year&fit=$distribution&includelast=$include_event&restrain=$restrain&timeseries=./data/$gmst_file.1.$id.inf&type=attribute&year=$event_year&changesign=$lower_tail"
+eval_script="https://climexp.knmi.nl/attribute.cgi?EMAIL=$id&STATION=$model_fnm&WMO=$upload_fnm&assume=$fit_type&begin=$obs_start&biasrt=$return_period&ci=$confint&cov1=$gmst_past&dgt=80&end=$event_year&fit=$distribution&includelast=$include_event&restrain=$restrain&timeseries=./data/$gmst_file.1.$id.inf&type=attribute&year=$event_year"$chsign
  
 curl ${data_script}
 curl ${eval_script} > ${eval_logfile}
+
+# get value of current event (needed for future attribution)
+line=`cat $attr_logfile | grep "atr1"`; rv=${line//*(value/}
+rv=`echo ${rv//)*/}`
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # RUN MODEL ATTRIBUTION
 
-attr_script="https://climexp.knmi.nl/attribute.cgi?EMAIL=$id&STATION=$model_fnm&WMO=$upload_fnm&assume=$fit_type&biasrt=$return_period&ci=$confint&cov1=$gmst_past&dgt=80&end=$event_year&fit=$distribution&includelast=$include_event&restrain=$restrain&timeseries=./data/$gmst_file.1.$id.inf&type=attribute&year=$event_year"
+attr_script="https://climexp.knmi.nl/attribute.cgi?EMAIL=$id&STATION=$model_fnm&WMO=$upload_fnm&assume=$fit_type&biasrt=$return_period&ci=$confint&cov1=$gmst_past&dgt=80&end=$event_year&fit=$distribution&includelast=$include_event&restrain=$restrain&timeseries=./data/$gmst_file.1.$id.inf&type=attribute&year=$event_year"$chsign
 
 curl ${data_script}
 curl ${attr_script} > ${attr_logfile}
@@ -72,10 +79,7 @@ curl ${attr_script} > ${attr_logfile}
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # RUN FUTURE ATTRIBUTION
 
-# get value of current event
-line=`cat $attr_logfile | grep "atr1"`; rv=${line//*(value/}; rv=`echo ${rv//)*/}`
-
-proj_script="https://climexp.knmi.nl/attribute.cgi?EMAIL=$id&STATION=$model_fnm&WMO=$upload_fnm&assume=$fit_type&ci=$confint&cov1=$gmst_fut&dgt=80&end=2050&fit=$distribution&includelast=$include_event&restrain=$restrain&timeseries=./data/$gmst_file.1.$id.inf&type=attribute&xyear=$rv&year=$event_year"
+proj_script="https://climexp.knmi.nl/attribute.cgi?EMAIL=$id&STATION=$model_fnm&WMO=$upload_fnm&assume=$fit_type&ci=$confint&cov1=$gmst_fut&dgt=80&end=2050&fit=$distribution&includelast=$include_event&restrain=$restrain&timeseries=./data/$gmst_file.1.$id.inf&type=attribute&xyear=$rv&year=$event_year"$chsign
 
 curl ${data_script}
 curl ${proj_script} > ${proj_logfile}

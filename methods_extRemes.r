@@ -22,7 +22,7 @@ event_qcov <- function(mdl, covariate) {
 # function to get parameters of fitted model (with correct names)
 model_pars <- function(mdl) {
     
-    if(mdl$type == 'GEV_fixeddisp') {
+    if((mdl$type == 'GEV_fixeddisp') | (mdl$method == "MLE")) {
         
         return(mdl$results$par)
     } else {

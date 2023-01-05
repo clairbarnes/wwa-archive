@@ -332,3 +332,12 @@ def cordex_model(fnm): return gcm[fnm.split("_")[2]]+"_"+fnm.split("_")[4][:-4]+
 
 
 ###############################################################################################################
+
+def reshape_df(fnm, da):
+    
+    # method to load dataframe of fitted results & reshape into DataArray for plotting
+    df = pd.read_csv(fnm, index_col = 0)
+    fitted = xr.Dataset(data_vars = {vnm : xr.DataArray(np.array(df.loc[vnm]).reshape(*da.shape), dims = ["lat", "lon"]) for vnm in df.index},
+                        coords = {"lat" : da.lat, "lon" : da.lon})
+    
+    return fitted

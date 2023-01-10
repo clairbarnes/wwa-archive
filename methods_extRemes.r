@@ -10,6 +10,10 @@ suppressMessages({
 # function to construct covariate matrix at required covariate value
 event_qcov <- function(mdl, covariate) {
     
+    if(mdl$type == 'normal_fixeddisp') {
+        return(t(as.matrix(c(mu = 1, sigma = 1, alpha = covariate * unname(mdl$results$par["alpha"]), threshold = 0.925))))
+    }
+    
     if(mdl$type == 'GEV_fixeddisp') {
         return(t(as.matrix(c(mu = 1, sigma = 1, xi = 1, alpha = covariate * unname(mdl$results$par["alpha"]), threshold = 0.925))))
     } else {
@@ -22,7 +26,7 @@ event_qcov <- function(mdl, covariate) {
 # function to get parameters of fitted model (with correct names)
 model_pars <- function(mdl) {
     
-    if((mdl$type == 'GEV_fixeddisp') | (mdl$method == "MLE")) {
+    if((mdl$type %in% c('GEV_fixeddisp', 'normal_fixeddisp')) || (mdl$method == "MLE")) {
         
         return(mdl$results$par)
     } else {
@@ -53,12 +57,22 @@ model_pars <- function(mdl) {
 # function to get parameters of stationary GEV at given covariate level
 sgev_pars <- function(mdl, covariate, burn.in = 499) {
     
-    if(mdl$type == 'GEV_fixeddisp') {
+    if(mdl$type == 'normal_fixeddisp') {
+        
+        pars <- mdl$results$par
+        sf <- exp(pars["alpha"] * covariate / pars["mu0"])   # scaling factor
+        loc = pars["mu0"] * sf
+        scale = pars["sigma0"] * sf
+        shape = NA
+        
+    } else if(mdl$type == 'GEV_fixeddisp') {
+        
         pars <- mdl$results$par
         sf <- exp(pars["alpha"] * covariate / pars["mu0"])   # scaling factor
         loc = pars["mu0"] * sf
         scale = pars["sigma0"] * sf
         shape = pars["shape"]
+        
     } else {
         
         pars <- strip(mdl, burn.in = burn.in)
@@ -87,13 +101,41 @@ sgev_pars <- function(mdl, covariate, burn.in = 499) {
 }
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# function to extract return periods at given covariate (allows compatibility with fixed-disp methods)
 
+return_period <- function(mdl, value, covariate) {
+    
+    if(mdl$type == 'normal_fixeddisp') {
+        
+        pars <- sgev_pars(mdl, covariate)
+        rp <- 1/(1-pnorm(value, mean = pars$loc, sd = pars$scale))
+        
+    } else if(mdl$type == 'GEV_fixeddisp') {
+        
+        pars <- sgev_pars(mdl, covariate)
+        rp <- 1/(1-pevd(value, loc = pars$loc, scale = pars$scale, shape = pars$shape))
+
+    } else {
+        rp <- 1/(1-pextRemes(mdl, value))
+    }
+        
+    return(rp)
+}
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # function to extract return levels at given covariate (faster & more reliable than inbuilt methods)
 return_level <- function(mdl, rp, covariate) {
-            
-    pars <- sgev_pars(mdl, covariate = covariate)
-    rl <- rlevd(rp, loc = pars$loc, scale = pars$scale, shape = pars$shape)
-    return(rl)
+    
+    if(mdl$type == 'normal_fixeddisp') {
+        pars <- sgev_pars(mdl, covariate = covariate)
+        rl <- qnorm(1-1/rp, mean = pars$loc, sd = pars$scale)
+        return(rl)
+    } else { 
+        pars <- sgev_pars(mdl, covariate = covariate)
+        rl <- rlevd(rp, loc = pars$loc, scale = pars$scale, shape = pars$shape)
+        return(rl)
+    }
+
 }
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -116,8 +158,10 @@ rl.boot.ci <- function(mdl, x, covariate_value, ci = 95, nsamp = 5000, seed = 1)
         # resample the source data, run the model again using the bootstrapped data
         boot_df <- mdl$cov.data[sample(1:n,n,replace = T),]
         
-        if(mdl_fd$type == "GEV_fixeddisp") {
-            boot_fit <- fevd_fixeddisp("precip", "gmst", data = boot_df)
+        if(mdl$type == "normal_fixeddisp") {
+            boot_fit <- fnorm_fixeddisp(mdl$var.name, mdl$cov.name, data = boot_df)
+        } else if(mdl$type == "GEV_fixeddisp") {
+            boot_fit <- fevd_fixeddisp(mdl$var.name, mdl$cov.name, data = boot_df)
         } else {
             boot_fit <- suppressWarnings(update(mdl, data = boot_df))
         }
@@ -137,8 +181,15 @@ rl.boot.ci <- function(mdl, x, covariate_value, ci = 95, nsamp = 5000, seed = 1)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # quickly compute change in intensity
 
-delta_I <- function(mdl, rp, cov1, cov2) {
-    unname(return_level(mdl, rp, cov1) - return_level(mdl, rp, cov2))
+delta_I <- function(mdl, rp, cov1, cov2, rel = F) {
+    
+    rl1 <- return_level(mdl, rp, cov1)
+    rl2 <- return_level(mdl, rp, cov2)
+    if(rel) {
+        return(unname((rl1 - rl2) / rl2) * 100)
+    } else {
+        return(unname(rl1 - rl2))
+    }
 }
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -146,10 +197,14 @@ delta_I <- function(mdl, rp, cov1, cov2) {
 
 prob_ratio <- function(mdl, value, cov1, cov2) {
     
-    if(mdl$type == 'GEV_fixeddisp') {
+    if(mdl$type == 'normal_fixeddisp') {
         pars <- mdl$results$par
-        ep1 = 1-pevd(event_value, loc = pars["mu"] * exp(pars["alpha"] * cov1 / pars["mu"]), scale = pars["sigma"] * exp(pars["alpha"] * cov1 / pars["mu"]), shape = pars["xi"])
-        ep2 = 1-pevd(event_value, loc = pars["mu"] * exp(pars["alpha"] * cov2 / pars["mu"]), scale = pars["sigma"] * exp(pars["alpha"] * cov2 / pars["mu"]), shape = pars["xi"])
+        ep1 = 1-pnorm(value, mean = pars["mu0"] * exp(pars["alpha"] * cov1 / pars["mu0"]), sd = pars["sigma0"] * exp(pars["alpha"] * cov1 / pars["mu0"]))
+        ep2 = 1-pnorm(value, mean = pars["mu0"] * exp(pars["alpha"] * cov2 / pars["mu0"]), sd = pars["sigma0"] * exp(pars["alpha"] * cov2 / pars["mu0"]))
+    } else if(mdl$type == 'GEV_fixeddisp') {
+        pars <- mdl$results$par
+        ep1 = 1-pevd(value, loc = pars["mu0"] * exp(pars["alpha"] * cov1 / pars["mu0"]), scale = pars["sigma0"] * exp(pars["alpha"] * cov1 / pars["mu0"]), shape = pars["xi"])
+        ep2 = 1-pevd(value, loc = pars["mu0"] * exp(pars["alpha"] * cov2 / pars["mu0"]), scale = pars["sigma0"] * exp(pars["alpha"] * cov2 / pars["mu0"]), shape = pars["xi"])
     } else {
         ep1 = 1-pextRemes(mdl, q = value, qcov = event_qcov(mdl, cov1))
         ep2 = 1-pextRemes(mdl, q = value, qcov = event_qcov(mdl, cov2))
@@ -178,6 +233,7 @@ fevd_fixeddisp <- function(x, covariate, data, method = "MLE", ...) {
     res[["x"]] <- data[,x]
     res[["cov.data"]] <- data
     res[["cov.name"]] <- covariate
+    res[["var.name"]] <- x
     
     return(res)
 }
@@ -185,24 +241,58 @@ fevd_fixeddisp <- function(x, covariate, data, method = "MLE", ...) {
 # location, shape & scale parameters for fixed-dispersion model
 fd_lss <- function(mdl, covariate = NA) {
     
-    cov_list <- mdl_fd$cov.data[,mdl_fd$cov.name]
-    
+    cov_list <- mdl$cov.data[,mdl$cov.name]
     pars <- mdl$results$par
+    
     sf <- exp(pars["alpha"] * cov_list / pars["mu0"])   # scaling factor
     loc = pars["mu0"] * sf
     scale = pars["sigma0"] * sf
-    shape = pars["shape"]
     
+    if(mdl$type == 'normal_fixeddisp') { lss <- list(loc = loc, scale = scale) } 
+    else if(mdl$type == 'GEV_fixeddisp') { lss <- list(loc = loc, scale = scale, shape = unname(pars["shape"])) }
+        
     if(is.na(covariate)) {
-        return(list(loc = loc, scale = scale, shape = unname(shape)))
+        return(lss)
     } else {
-        i <- which.min(abs(cov_list - covariate))
-        return(list(loc = loc[i], scale = scale[i], shape = unname(shape)))
+        return(lapply(lss, "[", which.min(abs(cov_list - covariate))))
     }
 }
 
 trans_fd <- function(mdl) {
     
-    pars <- fd_lss(mdl)
-    return(log(1 + (mdl_fd$x - pars$loc) * pars$shape / pars$scale) / pars$shape)
+    if(mdl$type == 'normal_fixeddisp') {
+        
+    } else if(mdl$type == 'GEV_fixeddisp') {
+        pars <- fd_lss(mdl)
+    return(log(1 + (mdl$x - pars$loc) * pars$shape / pars$scale) / pars$shape)
+    } else {
+        return(trans(mdl))
+    }
+    
+}
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Nonstationary normal distribution with fixed dispersion (as fitted by climate explorer)
+
+norm_fixeddisp <- function(pars = c(mu0, sigma0, alpha), covariate, x) {
+    
+    loc = pars["mu0"] * exp(pars["alpha"] * covariate / pars["mu0"])
+    scale = pars["sigma0"] * exp(pars["alpha"] * covariate / pars["mu0"])
+    
+    # return negative log-likelihood to be minimised
+    return(-sum(dnorm(x, mean = loc, sd = scale, log = T)))
+}
+
+fnorm_fixeddisp <- function(x, covariate, data, method = "MLE", ...) {
+    
+    res <- list("results" = optim(par = c(mu0 = mean(data[,x]), sigma0 = sd(data[,x]), alpha = 0), norm_fixeddisp, 
+                                  covariate = data[,covariate], x = data[,x]))
+    res[["type"]] <- "normal_fixeddisp"
+    res[["x"]] <- data[,x]
+    res[["cov.data"]] <- data
+    res[["cov.name"]] <- covariate
+    res[["var.name"]] <- x
+    
+    return(res)
 }

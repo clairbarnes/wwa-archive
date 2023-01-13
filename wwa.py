@@ -33,6 +33,8 @@ warnings.filterwarnings("ignore", message = "facecolor will have no effect.+")  
 warnings.filterwarnings("ignore", message = "__len__ for multi-part geometries is deprecated.+")         # warning about change to Shapely defaults
 warnings.filterwarnings("ignore", message = ".+Results from 'centroid' are likely incorrect.+")            # warning against using centroids without reprojecting
 
+from  IPython.display import clear_output
+
 ###############################################################################################################
 ## GOODNESS OF FIT
 

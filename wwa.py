@@ -246,6 +246,24 @@ def eval_df(ens, region = None):
     
     
 def nearest_px(x,y,da, xcoord = "longitude", ycoord = "latitude"):
+    
+#     if xcoord is None:
+#         if "lon" in da.dims:
+#             xcoord = "lon"
+#         elif "longitude" in da.dims:
+#             xcoord = "longitude"
+#         else: 
+#             print("No x-coords identified")
+#             return None
+        
+#     if ycoord is None:
+#         if "lat" in da.dims:
+#             xcoord = "lat"
+#         elif "latitude" in da.dims:
+#             xcoord = "latitude"
+#         else: 
+#             print("No y-coords identified")
+#             return None
    
     # get squared distance from (x,y) to each point
     dist2 = (da[ycoord] - y)**2 + (da[xcoord] - x)**2

@@ -19,6 +19,10 @@ import geopandas as gpd
 import regionmask
 from geopy.geocoders import Nominatim
 
+# needed when converting regionmask into polygon
+from shapely.geometry import Polygon
+from xrspatial.experimental import polygonize
+
 import re
 import glob
 from dateutil.relativedelta import relativedelta
@@ -163,11 +167,10 @@ def month_xlabels(dates, ax = None):
     if ax is None: ax = plt.gca()
     
     labelticks = [i for i in range(366) if dates.dt.day[i] == 1]
-    labels = [dates[i].values for i in range(366) if dates.dt.day[i] == 1]
+    labels = [dates[i].dt.strftime("%b").values for i in range(366) if dates.dt.day[i] == 1]
 
     ax.set_xticks(labelticks)
     ax.set_xticklabels(labels)
-    ax.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%b"))
 
     
 ###############################################################################################################

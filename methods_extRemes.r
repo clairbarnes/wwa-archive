@@ -103,23 +103,27 @@ sgev_pars <- function(mdl, covariate, burn.in = 499) {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # function to extract return periods at given covariate (allows compatibility with fixed-disp methods)
 
-return_period <- function(mdl, value, covariate) {
+return_period <- function(mdl, value, covariate, lower = F) {
     
     if(mdl$type == 'normal_fixeddisp') {
         
         pars <- sgev_pars(mdl, covariate)
-        rp <- 1/(1-pnorm(value, mean = pars$loc, sd = pars$scale))
+        p <- pnorm(value, mean = pars$loc, sd = pars$scale)
         
     } else if(mdl$type == 'GEV_fixeddisp') {
         
         pars <- sgev_pars(mdl, covariate)
-        rp <- 1/(1-pevd(value, loc = pars$loc, scale = pars$scale, shape = pars$shape))
+        p <- pevd(value, loc = pars$loc, scale = pars$scale, shape = pars$shape)
 
     } else {
-        rp <- 1/(1-pextRemes(mdl, value))
+        p <- pextRemes(mdl, value)
     }
-        
-    return(rp)
+    
+    if(lower) {
+        return(1/p)
+    } else {
+        return(1/(1-p))
+    }
 }
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -195,20 +199,22 @@ delta_I <- function(mdl, rp, cov1, cov2, rel = F) {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # quickly compute probability ratio
 
-prob_ratio <- function(mdl, value, cov1, cov2) {
+prob_ratio <- function(mdl, value, cov1, cov2, lower = F) {
+    
+    pars1 <- sgev_pars(mdl, cov1)
+    pars2 <- sgev_pars(mdl, cov2)
     
     if(mdl$type == 'normal_fixeddisp') {
-        pars <- mdl$results$par
-        ep1 = 1-pnorm(value, mean = pars["mu0"] * exp(pars["alpha"] * cov1 / pars["mu0"]), sd = pars["sigma0"] * exp(pars["alpha"] * cov1 / pars["mu0"]))
-        ep2 = 1-pnorm(value, mean = pars["mu0"] * exp(pars["alpha"] * cov2 / pars["mu0"]), sd = pars["sigma0"] * exp(pars["alpha"] * cov2 / pars["mu0"]))
+        ep1 = pnorm(value, mean = pars1$loc, sd = pars1$scale, lower.tail = !lower)
+        ep2 = pnorm(value, mean = pars2$loc, sd = pars2$scale, lower.tail = !lower)
     } else if(mdl$type == 'GEV_fixeddisp') {
-        pars <- mdl$results$par
-        ep1 = 1-pevd(value, loc = pars["mu0"] * exp(pars["alpha"] * cov1 / pars["mu0"]), scale = pars["sigma0"] * exp(pars["alpha"] * cov1 / pars["mu0"]), shape = pars["xi"])
-        ep2 = 1-pevd(value, loc = pars["mu0"] * exp(pars["alpha"] * cov2 / pars["mu0"]), scale = pars["sigma0"] * exp(pars["alpha"] * cov2 / pars["mu0"]), shape = pars["xi"])
+        ep1 = pevd(value, loc = pars1$loc, scale = pars1$scale, shape = pars1$shape, lower.tail = !lower)
+        ep2 = pevd(value, loc = pars2$loc, scale = pars2$scale, shape = pars2$shape, lower.tail = !lower)
     } else {
-        ep1 = 1-pextRemes(mdl, q = value, qcov = event_qcov(mdl, cov1))
-        ep2 = 1-pextRemes(mdl, q = value, qcov = event_qcov(mdl, cov2))
+        ep1 = pextRemes(mdl, q = value, qcov = event_qcov(mdl, cov1), lower.tail = !lower)
+        ep2 = pextRemes(mdl, q = value, qcov = event_qcov(mdl, cov2), lower.tail = !lower)
     }
+        
     return(unname(ep1/ep2))
 }
 

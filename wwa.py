@@ -248,7 +248,7 @@ def eval_df(ens, region = None):
     
     
     
-def nearest_px(x,y,da, xcoord = "longitude", ycoord = "latitude"):
+def nearest_px(x,y,da, xcoord = "longitude", ycoord = "latitude", return_map = False):
     
 #     if xcoord is None:
 #         if "lon" in da.dims:
@@ -276,12 +276,16 @@ def nearest_px(x,y,da, xcoord = "longitude", ycoord = "latitude"):
    
     # also limit distance to closest two squares (in case there really is no data nearby)
     dist2 = dist2.where(dist2 <= 5.76e8)
-   
-    # find value in cell containing minimum distance
-    # if multiple equidistant cells, will average over them
-    val = da.where(dist2 == dist2.min()).mean([xcoord, ycoord])
-   
-    return val
+    
+    if return_map:
+        closest_px = xr.ones_like(da).where(dist2 == dist2.min())
+        return closest_px
+    else:
+        # return time series
+        # find value in cell containing minimum distance
+        # if multiple equidistant cells, will average over them
+        val = da.where(dist2 == dist2.min()).mean([xcoord, ycoord])
+        return val
 
 
 

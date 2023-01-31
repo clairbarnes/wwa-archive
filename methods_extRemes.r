@@ -54,24 +54,49 @@ model_pars <- function(mdl) {
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# function to get parameters of stationary GEV at given covariate level
+# function to get parameters of nonstationary GEV at given covariate level
 sgev_pars <- function(mdl, covariate, burn.in = 499) {
     
-    if(mdl$type == 'normal_fixeddisp') {
+    if(grepl("fixeddisp", mdl$type)) {
         
         pars <- mdl$results$par
         sf <- exp(pars["alpha"] * covariate / pars["mu0"])   # scaling factor
+        
         loc = pars["mu0"] * sf
         scale = pars["sigma0"] * sf
-        shape = NA
+        if(any(grepl("shape", names(mdl$results$par)))) { shape = pars["shape"] } else { shape = NA }
         
-    } else if(mdl$type == 'GEV_fixeddisp') {
+    } else if(grepl("shiftscale", mdl$type)) {
         
         pars <- mdl$results$par
-        sf <- exp(pars["alpha"] * covariate / pars["mu0"])   # scaling factor
-        loc = pars["mu0"] * sf
-        scale = pars["sigma0"] * sf
-        shape = pars["shape"]
+        
+        loc = pars["mu0"] + pars["alpha"] * covariate
+        scale = pars["sigma0"] + pars["beta"] * covariate
+        if(any(grepl("shape", names(mdl$results$par)))) { shape = pars["shape"] } else { shape = NA }
+        
+    } else if(grepl("shift", mdl$type)) {
+        
+        pars <- mdl$results$par
+        
+        loc = pars["mu0"] + pars["alpha"] * covariate
+        scale = rep(pars["sigma0"], length(covariate))
+        if(any(grepl("shape", names(mdl$results$par)))) { shape = pars["shape"] } else { shape = NA }
+        
+    } else if(grepl("scale", mdl$type)) {
+        
+        pars <- mdl$results$par
+        
+        loc = rep(pars["mu0"], length(covariate))
+        scale = pars["sigma0"] + pars["alpha"] * covariate
+        if(any(grepl("shape", names(mdl$results$par)))) { shape = pars["shape"] } else { shape = NA }
+        
+    } else if(grepl("shape", mdl$type)) {
+        
+        pars <- mdl$results$par
+        
+        loc = rep(pars["mu0"], length(covariate))
+        scale = pars["sigma0"] + pars["alpha"] * covariate
+        shape = pars["shape"] + pars["alpha"] * covariate
         
     } else {
         
@@ -105,36 +130,35 @@ sgev_pars <- function(mdl, covariate, burn.in = 499) {
 
 return_period <- function(mdl, value, covariate, lower = F) {
     
-    if(mdl$type == 'normal_fixeddisp') {
-        
-        pars <- sgev_pars(mdl, covariate)
-        p <- pnorm(value, mean = pars$loc, sd = pars$scale)
-        
+    pars <- sgev_pars(mdl, covariate)
+    
+    if(grepl("gamma", mdl$type)) {
+        p <- pgamma((value - pars$loc)/pars$scale, shape = pars$shape, lower.tail = lower) 
+    } else if(grepl("norm", mdl$type)) {
+        p <- pnorm(value, mean = pars$loc, sd = pars$scale, lower.tail = lower)
     } else if(mdl$type == 'GEV_fixeddisp') {
-        
-        pars <- sgev_pars(mdl, covariate)
-        p <- pevd(value, loc = pars$loc, scale = pars$scale, shape = pars$shape)
-
+        p <- pevd(value, loc = pars$loc, scale = pars$scale, shape = pars$shape, lower.tail = lower)
     } else {
-        p <- pextRemes(mdl, value)
+        p <- pextRemes(mdl, value, lower.tail = lower)
     }
     
-    if(lower) {
-        return(1/p)
-    } else {
-        return(1/(1-p))
-    }
+    return(1/p)
 }
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # function to extract return levels at given covariate (faster & more reliable than inbuilt methods)
-return_level <- function(mdl, rp, covariate) {
+return_level <- function(mdl, rp, covariate, lower = F) {
     
-    if(mdl$type == 'normal_fixeddisp') {
+    if(grepl("gamma", mdl$type)) {
         pars <- sgev_pars(mdl, covariate = covariate)
-        rl <- qnorm(1-1/rp, mean = pars$loc, sd = pars$scale)
+        rl <- qgamma(1/rp, shape = pars$shape, lower.tail = lower) * pars$scale + pars$loc
+        return(rl)
+    } else if(grepl("norm", mdl$type)) {
+        pars <- sgev_pars(mdl, covariate = covariate)
+        rl <- qnorm(1/rp, mean = pars$loc, sd = pars$scale, lower.tail = lower)
         return(rl)
     } else { 
+        print("Check rlevd behaviour for lower tails")
         pars <- sgev_pars(mdl, covariate = covariate)
         rl <- rlevd(rp, loc = pars$loc, scale = pars$scale, shape = pars$shape)
         return(rl)
@@ -185,10 +209,10 @@ rl.boot.ci <- function(mdl, x, covariate_value, ci = 95, nsamp = 5000, seed = 1)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # quickly compute change in intensity
 
-delta_I <- function(mdl, rp, cov1, cov2, rel = F) {
+delta_I <- function(mdl, rp, cov1, cov2, rel = F, lower = F) {
     
-    rl1 <- return_level(mdl, rp, cov1)
-    rl2 <- return_level(mdl, rp, cov2)
+    rl1 <- return_level(mdl, rp, cov1, lower = lower)
+    rl2 <- return_level(mdl, rp, cov2, lower = lower)
     if(rel) {
         return(unname((rl1 - rl2) / rl2) * 100)
     } else {
@@ -204,19 +228,42 @@ prob_ratio <- function(mdl, value, cov1, cov2, lower = F) {
     pars1 <- sgev_pars(mdl, cov1)
     pars2 <- sgev_pars(mdl, cov2)
     
-    if(mdl$type == 'normal_fixeddisp') {
-        ep1 = pnorm(value, mean = pars1$loc, sd = pars1$scale, lower.tail = !lower)
-        ep2 = pnorm(value, mean = pars2$loc, sd = pars2$scale, lower.tail = !lower)
+    if(grepl("gamma", mdl$type)) {
+        p1 = pgamma((value - pars1$loc)/pars1$scale, shape = pars1$shape, lower.tail = lower)
+        p2 = pgamma((value - pars2$loc)/pars2$scale, shape = pars2$shape, lower.tail = lower)
+    } else if(grepl("norm", mdl$type)) {
+        p1 = pnorm(value, mean = pars1$loc, sd = pars1$scale, lower.tail = lower)
+        p2 = pnorm(value, mean = pars2$loc, sd = pars2$scale, lower.tail = lower)
     } else if(mdl$type == 'GEV_fixeddisp') {
-        ep1 = pevd(value, loc = pars1$loc, scale = pars1$scale, shape = pars1$shape, lower.tail = !lower)
-        ep2 = pevd(value, loc = pars2$loc, scale = pars2$scale, shape = pars2$shape, lower.tail = !lower)
+        p1 = pevd(value, loc = pars1$loc, scale = pars1$scale, shape = pars1$shape, lower.tail = lower)
+        p2 = pevd(value, loc = pars2$loc, scale = pars2$scale, shape = pars2$shape, lower.tail = lower)
     } else {
-        ep1 = pextRemes(mdl, q = value, qcov = event_qcov(mdl, cov1), lower.tail = !lower)
-        ep2 = pextRemes(mdl, q = value, qcov = event_qcov(mdl, cov2), lower.tail = !lower)
+        p1 = pextRemes(mdl, q = value, qcov = event_qcov(mdl, cov1), lower.tail = lower)
+        p2 = pextRemes(mdl, q = value, qcov = event_qcov(mdl, cov2), lower.tail = lower)
     }
-        
-    return(unname(ep1/ep2))
+    return(unname(p1/p2))
 }
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+fit_results <- function(mdl, event_value, cov1, cov2, lower = F, dI_rel = F) {
+    
+    # method to compute useful results from fitted model and output as dataframe
+    rp_event <- return_period(mdl, event_value, cov1, lower = lower)
+    rp_alt = return_period(mdl, event_value, cov2, lower = lower)
+    pr <- rp_alt / rp_event
+    dI <- delta_I(mdl, rp_event, cov1, cov2, rel = dI_rel)
+    
+    res_list <- list(mdl = mdl$type, converged = mdl$results$convergence, event_value = event_value, 
+                             alpha = unname(mdl$results$par["alpha"]), "loglik" = mdl$results$value,
+                             rp_event = rp_event, rp_alt = rp_alt, pr = pr, delta_I = dI)
+    
+    if(grepl("shiftscale", mdl$type)) {res_list <- append(res_list, list(beta = unname(mdl$results$par["alpha"])), after = 3)}
+    
+    return(as.data.frame(res_list))
+}
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Nonstationary GEV with fixed dispersion (as fitted by climate explorer)
@@ -254,7 +301,8 @@ fd_lss <- function(mdl, covariate = NA) {
     loc = pars["mu0"] * sf
     scale = pars["sigma0"] * sf
     
-    if(mdl$type == 'normal_fixeddisp') { lss <- list(loc = loc, scale = scale) } 
+    if(mdl$type == 'gamma_fixeddisp') { lss <- list(loc = loc, scale = scale, shape = unname(pars["shape"])) } 
+    else if(mdl$type == 'normal_fixeddisp') { lss <- list(loc = loc, scale = scale) } 
     else if(mdl$type == 'GEV_fixeddisp') { lss <- list(loc = loc, scale = scale, shape = unname(pars["shape"])) }
         
     if(is.na(covariate)) {
@@ -264,24 +312,53 @@ fd_lss <- function(mdl, covariate = NA) {
     }
 }
 
-trans_fd <- function(mdl) {
+stransf <- function(mdl, covariate = NA, lower = F) {
     
-    if(mdl$type == 'normal_fixeddisp') {
+    # method to transform values to equivalent in stationary distribution
+    
+    # parameters of nonstationary distribution
+    ns_pars <- sgev_pars(mdl, mdl$cov.data[,mdl$cov.name])
+    
+    # parameters of stationary distribution (set to standard form if not provided)
+    if(is.na(covariate)) {
+        s_pars <- list(loc = 0, scale = 1, shape = 1)
+    } else {
+        s_pars <- sgev_pars(mdl, covariate)
+    }
+    
+    if(grepl("gamma", mdl$type)) {
+        
+        # use inverse probability transform
+        pit <- sort(pgamma((mdl$x - ns_pars$loc) / ns_pars$scale, shape = ns_pars$shape, lower.tail = lower), decreasing = T)
+        svalue <- qgamma(pit, s_pars$shape, lower.tail = lower) * s_pars$scale + s_pars$loc
+        return(svalue)
+        
+    } else if(grepl("norm", mdl$type)) {
+        
+        # use inverse probability transform
+        pit <- sort(pnorm(mdl$x, mean = ns_pars$loc, sd = ns_pars$scale, lower.tail = lower), decreasing = T)
+        svalue <- qnorm(pit, mean = s_pars$loc, sd = s_pars$scale, lower.tail = lower)
+        return(svalue)
         
     } else if(mdl$type == 'GEV_fixeddisp') {
+        
+        # transform to standard Gumbel
         pars <- fd_lss(mdl)
-    return(log(1 + (mdl$x - pars$loc) * pars$shape / pars$scale) / pars$shape)
+        return(log(1 + (mdl$x - pars$loc) * pars$shape / pars$scale) / pars$shape)
+        
     } else {
         return(trans(mdl))
     }
     
 }
 
+#=======================================================================================================================
+# FITTING MODELS                                                                                                    ####
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Nonstationary normal distribution with fixed dispersion (as fitted by climate explorer)
 
-norm_fixeddisp <- function(pars = c(mu0, sigma0, alpha), covariate, x) {
+norm_fixeddisp <- function(pars = c(mu0, sigma0, shape, alpha), covariate, x) {
     
     loc = pars["mu0"] * exp(pars["alpha"] * covariate / pars["mu0"])
     scale = pars["sigma0"] * exp(pars["alpha"] * covariate / pars["mu0"])
@@ -289,16 +366,165 @@ norm_fixeddisp <- function(pars = c(mu0, sigma0, alpha), covariate, x) {
     # return negative log-likelihood to be minimised
     return(-sum(dnorm(x, mean = loc, sd = scale, log = T)))
 }
-
-fnorm_fixeddisp <- function(x, covariate, data, method = "MLE", ...) {
+      
+norm_shift <- function(pars = c(mu0, sigma0, shape, alpha), covariate, x) {
     
-    res <- list("results" = optim(par = c(mu0 = mean(data[,x]), sigma0 = sd(data[,x]), alpha = 0), norm_fixeddisp, 
-                                  covariate = data[,covariate], x = data[,x]))
-    res[["type"]] <- "normal_fixeddisp"
+    loc = pars["mu0"] + pars["alpha"] * covariate
+    scale = pars["sigma0"]
+    
+    # return negative log-likelihood to be minimised
+    return(-sum(dnorm(x, mean = loc, sd = scale, log = T)))
+}
+
+norm_scale <- function(pars = c(mu0, sigma0, shape, alpha), covariate, x) {
+    
+    loc = pars["mu0"]
+    scale = pars["sigma0"] + pars["alpha"] * covariate
+    
+    # return negative log-likelihood to be minimised
+    return(-sum(dnorm(x, mean = loc, sd = scale, log = T)))
+}
+    
+    
+norm_shiftscale <- function(pars = c(mu0, sigma0, shape, alpha, beta), covariate, x) {
+    
+    loc = pars["mu0"] + pars["alpha"] * covariate
+    scale = pars["sigma0"] + pars["beta"] * covariate
+    
+    # return negative log-likelihood to be minimised
+    return(-sum(dnorm(x, mean = loc, sd = scale, log = T)))
+}
+    
+    
+fnorm <- function(x, covariate, data, type = "shift", method = "MLE", optim.method = "Nelder-Mead", init = NA, ...) {
+    
+    mtype <- paste0("norm_", type)
+    fun <- get(mtype)
+    
+    if(is.na(init)) { init <- c(mu0 = mean(data[,x]), sigma0 = sd(data[,x]), alpha = 0) }
+    
+    if((type == "shiftscale") & !all(grepl("beta", init))) { init <- c(init, beta = 0) }
+    
+    # need to sort out a better way to estimate starting parameters
+    res <- list("results" = optim(par = init, fun, covariate = data[,covariate], x = data[,x]), method = optim.method, ...)
+    res[["type"]] <- mtype
     res[["x"]] <- data[,x]
     res[["cov.data"]] <- data
     res[["cov.name"]] <- covariate
     res[["var.name"]] <- x
     
     return(res)
+}
+
+    
+       
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Nonstationary gamma distribution with fixed dispersion (equivalent to that fitted by climate explorer)
+
+gamma_fixeddisp <- function(pars = c(mu0, sigma0, shape, alpha), covariate, x) {
+    
+    loc = pars["mu0"] * exp(pars["alpha"] * covariate / pars["mu0"])
+    scale = pars["sigma0"] * exp(pars["alpha"] * covariate / pars["mu0"])
+    shape = pars["shape"]
+    
+    # return negative log-likelihood to be minimised
+    return(-sum(log(dgamma((x - loc) / scale, shape = shape, log = F)/scale)))
+}
+      
+gamma_shift <- function(pars = c(mu0, sigma0, shape, alpha), covariate, x) {
+    
+    loc = pars["mu0"] + pars["alpha"] * covariate
+    scale = pars["sigma0"]
+    shape = pars["shape"]
+    
+    # return negative log-likelihood to be minimised
+    return(-sum(log(dgamma((x - loc) / scale, shape = shape, log = F)/scale)))
+}
+
+gamma_scale <- function(pars = c(mu0, sigma0, shape, alpha), covariate, x) {
+    
+    loc = pars["mu0"]
+    scale = pars["sigma0"] + pars["alpha"] * covariate
+    shape = pars["shape"]
+    
+    # return negative log-likelihood to be minimised
+    return(-sum(log(dgamma((x - loc) / scale, shape = shape, log = F)/scale)))
+}
+    
+    
+gamma_shiftscale <- function(pars = c(mu0, sigma0, shape, alpha, beta), covariate, x) {
+    
+    loc = pars["mu0"] + pars["alpha"] * covariate
+    scale = pars["sigma0"] + pars["beta"] * covariate
+    shape = pars["shape"]
+    
+    # return negative log-likelihood to be minimised
+    return(-sum(log(dgamma((x - loc) / scale, shape = shape, log = F)/scale)))
+}
+    
+fgamma <- function(x, type = "shift", covariate, data, method = "MLE", optim.method = "Nelder-Mead", init = c(mu0 = 2, sigma0 = 0.5, shape = 2, alpha = 0), ...) {
+    
+    mtype <- paste0("gamma_", type)
+    fun <- get(mtype)
+    
+    if((type == "shiftscale") & !all(grepl("beta", init))) { init <- c(init, beta = 0) }
+    
+    # need to sort out a better way to estimate starting parameters
+    res <- list("results" = optim(par = init, fun, covariate = data[,covariate], x = data[,x]), method = optim.method, ...)
+    res[["type"]] <- mtype
+    res[["x"]] <- data[,x]
+    res[["cov.data"]] <- data
+    res[["cov.name"]] <- covariate
+    res[["var.name"]] <- x
+    
+    return(res)
+}
+    
+    
+#=======================================================================================================================
+# PLOTTING METHODS                                                                                                  ####
+    
+plot_gmsttrend <- function(mdl, event_year = "2022", lower = F, xlab = "GMST", ylab = "value", legend_pos = "topright", ...) {
+    
+    event_year = toString(event_year)
+    
+    covariate <- mdl$cov.data[,mdl$cov.name]
+       
+    plot(covariate, mdl$x, pch = 20, xlab = xlab, ylab = ylab, ...)
+    points(df[event_year, c(mdl$cov.name, mdl$var.name)], col = "red", lwd = 3)
+    lines(covariate, sgev_pars(mdl, covariate)$loc, lwd = 2)
+    lines(covariate, return_level(mdl, 6, covariate, lower = lower), col = "blue", lwd = 2)
+    lines(covariate, return_level(mdl, 40, covariate, lower = lower), col = "blue", lwd = 1) 
+    
+    legend(legend_pos, legend = c("location", "1-in-6-year event", "1-in-40-year event"), lty = 1, col = c("black", "blue", "blue"), lwd = c(2,2,1))
+}
+    
+
+plot_returnperiods <- function(mdl, cov1, cov2, event_value, lower = F, ylim = NA, pch = 20, ylab = "value", legend_pos = "topright", main = "", ...) {
+    
+    rp_x <- unique(c(seq(1.1,2,0.1), seq(2,100,1), seq(100,1000,10), seq(100,1000,100), seq(1000,10000,1000))) # return periods at which to calculate values
+    rp_th <- 1/seq(1,0,length.out = length(mdl$x)+2)[2:(length(mdl$x)+1)]                                      # theoretical return periods
+    
+    if(is.na(ylim[1])) { ylim <- range(pretty(mdl$x)) }
+    if(min(ylim) <= 0) { ylim <- c(0.01, max(ylim)) }
+    
+    # prep axes
+    plot(0,type = "n", xlim = c(1,10000), ylim = ylim, log = "x", xlab = "Return period (years)", ylab = ylab, main = main)
+    
+    # return period curves
+    lines(rp_x, return_level(mdl, rp_x, cov1, lower = lower), lwd = 2, col = "firebrick")
+    lines(rp_x, return_level(mdl, rp_x, cov2, lower = lower), lwd = 2, col = "blue")
+    
+    # expected return periods vs return levels transformed to stationarity at that covariate value
+    points(rp_th, stransf(mdl, cov1, lower = lower), col = "firebrick", pch = pch)
+    points(rp_th, stransf(mdl, cov2, lower = lower), col = "blue", pch = pch)
+    
+    # horizontal line showing observed event
+    abline(h = event_value, col = "magenta")
+    suppressWarnings(rug(return_period(mdl, event_value, cov1, lower = lower), lwd = 3, col = "firebrick"))
+    suppressWarnings(rug(return_period(mdl, event_value, cov2, lower = lower), lwd = 3, col = "blue"))
+    
+    # abline(v = return_period(mdl, event_value, cov1, lower = lower))
+    
+    legend(legend_pos, legend = c("2022 GMST", "2022 GMST -1.2", "Observed event"), col = c("firebrick", "blue", "magenta"), lty = 1, pch = c(20,20,NA), bty = "n")
 }

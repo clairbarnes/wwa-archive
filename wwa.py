@@ -5,12 +5,13 @@ import xarray as xr; xr.set_options(keep_attrs = True)
 import pandas as pd
 import numpy as np
 
+from scipy.stats import norm, gamma
+
 from functools import reduce
 
-from xclim.core.units import convert_units_to
 from xclim.core.calendar import convert_calendar
+from xclim.core.units import convert_units_to
 
-from scipy.stats import norm, gamma, gaussian_kde
 
 import os; os.environ['PROJ_LIB'] = '/home/clair/miniconda3/envs/wwa/share/proj'                         # fixes error message on import of cartopy etc
 
@@ -26,6 +27,7 @@ from xrspatial.experimental import polygonize
 import re
 import glob
 from dateutil.relativedelta import relativedelta
+from datetime import datetime
 
 import matplotlib.pyplot as plt
 import matplotlib
@@ -162,7 +164,9 @@ def read_results(fnm):
 ###############################################################################################################
 ## PLOTTING
 
-def month_xlabels(dates, ax = None):
+def sc_xlabels(dates, ax = None):
+    
+    # method to add labels to seasonal cycle plot
     
     if ax is None: ax = plt.gca()
     
@@ -172,6 +176,9 @@ def month_xlabels(dates, ax = None):
     ax.set_xticks(labelticks)
     ax.set_xticklabels(labels)
 
+    
+# method to get DOY offset for years starting other than in January
+def y_offset(months): return datetime(2020,months,1).timetuple().tm_yday
     
 ###############################################################################################################
 ## MISC
@@ -368,3 +375,5 @@ def reshape_df(fnm, da):
                         coords = {"lat" : da.lat, "lon" : da.lon})
     
     return fitted
+
+

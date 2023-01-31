@@ -488,6 +488,69 @@ fgamma <- function(x, type = "shift", covariate, data, method = "MLE", optim.met
 }
     
     
+    
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Nonstationary normal distribution with fixed dispersion (as fitted by climate explorer)
+
+lnorm_fixeddisp <- function(pars = c(mu0, sigma0, shape, alpha), covariate, x) {
+    
+    loc = pars["mu0"] * exp(pars["alpha"] * covariate / pars["mu0"])
+    scale = pars["sigma0"] * exp(pars["alpha"] * covariate / pars["mu0"])
+    
+    # return negative log-likelihood to be minimised
+    return(-sum(dlnorm(x, mean = loc, sd = scale, log = T)))
+}
+      
+lnorm_shift <- function(pars = c(mu0, sigma0, shape, alpha), covariate, x) {
+    
+    loc = pars["mu0"] + pars["alpha"] * covariate
+    scale = pars["sigma0"]
+    
+    # return negative log-likelihood to be minimised
+    return(-sum(dlnorm(x, mean = loc, sd = scale, log = T)))
+}
+
+lnorm_scale <- function(pars = c(mu0, sigma0, shape, alpha), covariate, x) {
+    
+    loc = pars["mu0"]
+    scale = pars["sigma0"] + pars["alpha"] * covariate
+    
+    # return negative log-likelihood to be minimised
+    return(-sum(dlnorm(x, mean = loc, sd = scale, log = T)))
+}
+    
+    
+lnorm_shiftscale <- function(pars = c(mu0, sigma0, shape, alpha, beta), covariate, x) {
+    
+    loc = pars["mu0"] + pars["alpha"] * covariate
+    scale = pars["sigma0"] + pars["beta"] * covariate
+    
+    # return negative log-likelihood to be minimised
+    return(-sum(dlnorm(x, mean = loc, sd = scale, log = T)))
+}
+    
+    
+flnorm <- function(x, covariate, data, type = "shift", method = "MLE", optim.method = "Nelder-Mead", init = NA, ...) {
+    
+    mtype <- paste0("lnorm_", type)
+    fun <- get(mtype)
+    
+    if(is.na(init)) { init <- c(mu0 = mean(log(data[,x])), sigma0 = sd(log(data[,x])), alpha = 0) }
+    
+    if((type == "shiftscale") & !all(grepl("beta", init))) { init <- c(init, beta = 0) }
+    
+    # need to sort out a better way to estimate starting parameters
+    res <- list("results" = optim(par = init, fun, covariate = data[,covariate], x = data[,x]), method = optim.method, ...)
+    res[["type"]] <- mtype
+    res[["x"]] <- data[,x]
+    res[["cov.data"]] <- data
+    res[["cov.name"]] <- covariate
+    res[["var.name"]] <- x
+    
+    return(res)
+}
+    
+    
 #=======================================================================================================================
 # PLOTTING METHODS                                                                                                  ####
     

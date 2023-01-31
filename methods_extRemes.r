@@ -152,18 +152,17 @@ return_level <- function(mdl, rp, covariate, lower = F) {
     if(grepl("gamma", mdl$type)) {
         pars <- sgev_pars(mdl, covariate = covariate)
         rl <- qgamma(1/rp, shape = pars$shape, lower.tail = lower) * pars$scale + pars$loc
-        return(rl)
     } else if(grepl("norm", mdl$type)) {
         pars <- sgev_pars(mdl, covariate = covariate)
         rl <- qnorm(1/rp, mean = pars$loc, sd = pars$scale, lower.tail = lower)
-        return(rl)
     } else { 
         print("Check rlevd behaviour for lower tails")
         pars <- sgev_pars(mdl, covariate = covariate)
         rl <- rlevd(rp, loc = pars$loc, scale = pars$scale, shape = pars$shape)
-        return(rl)
     }
-
+    
+    if(grepl("lnorm", mdl$type)) rl <- exp(rl)
+    return(rl)
 }
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -213,6 +212,7 @@ delta_I <- function(mdl, rp, cov1, cov2, rel = F, lower = F) {
     
     rl1 <- return_level(mdl, rp, cov1, lower = lower)
     rl2 <- return_level(mdl, rp, cov2, lower = lower)
+
     if(rel) {
         return(unname((rl1 - rl2) / rl2) * 100)
     } else {
@@ -249,11 +249,18 @@ prob_ratio <- function(mdl, value, cov1, cov2, lower = F) {
 
 fit_results <- function(mdl, event_value, cov1, cov2, lower = F, dI_rel = F) {
     
+    if(grepl("lnorm", mdl$type)) {
+        ev <- log(event_value)
+    } else {
+        ev <- event_value
+    }
+    
     # method to compute useful results from fitted model and output as dataframe
-    rp_event <- return_period(mdl, event_value, cov1, lower = lower)
-    rp_alt = return_period(mdl, event_value, cov2, lower = lower)
+    rp_event <- return_period(mdl, ev, cov1, lower = lower)
+    rp_alt = return_period(mdl, ev, cov2, lower = lower)
     pr <- rp_alt / rp_event
-    dI <- delta_I(mdl, rp_event, cov1, cov2, rel = dI_rel)
+    
+    dI <- delta_I(mdl, rp_event, cov1, cov2, rel = dI_rel, lower = lower)
     
     res_list <- list(mdl = mdl$type, converged = mdl$results$convergence, event_value = event_value, 
                              alpha = unname(mdl$results$par["alpha"]), "loglik" = mdl$results$value,

@@ -1,5 +1,6 @@
 suppressMessages({
     library(extRemes)
+    library(MASS)
     library(plyr) 
     library(beepr)
 })
@@ -132,8 +133,12 @@ return_period <- function(mdl, value, covariate, lower = F) {
     
     pars <- sgev_pars(mdl, covariate)
     
+    # if(grepl("lnorm", mdl$type)) { value <- log(value) }
+    
     if(grepl("gamma", mdl$type)) {
         p <- pgamma((value - pars$loc)/pars$scale, shape = pars$shape, lower.tail = lower) 
+    } else if(grepl("lnorm", mdl$type)) {
+        p <- plnorm(value, mean = pars$loc, sd = pars$scale, lower.tail = lower)
     } else if(grepl("norm", mdl$type)) {
         p <- pnorm(value, mean = pars$loc, sd = pars$scale, lower.tail = lower)
     } else if(mdl$type == 'GEV_fixeddisp') {
@@ -231,6 +236,9 @@ prob_ratio <- function(mdl, value, cov1, cov2, lower = F) {
     if(grepl("gamma", mdl$type)) {
         p1 = pgamma((value - pars1$loc)/pars1$scale, shape = pars1$shape, lower.tail = lower)
         p2 = pgamma((value - pars2$loc)/pars2$scale, shape = pars2$shape, lower.tail = lower)
+    } else if(grepl("lnorm", mdl$type)) {
+        p1 = plnorm(value, mean = pars1$loc, sd = pars1$scale, lower.tail = lower)
+        p2 = plnorm(value, mean = pars2$loc, sd = pars2$scale, lower.tail = lower)
     } else if(grepl("norm", mdl$type)) {
         p1 = pnorm(value, mean = pars1$loc, sd = pars1$scale, lower.tail = lower)
         p2 = pnorm(value, mean = pars2$loc, sd = pars2$scale, lower.tail = lower)
@@ -248,13 +256,7 @@ prob_ratio <- function(mdl, value, cov1, cov2, lower = F) {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 fit_results <- function(mdl, event_value, cov1, cov2, lower = F, dI_rel = F) {
-    
-    if(grepl("lnorm", mdl$type)) {
-        ev <- log(event_value)
-    } else {
-        ev <- event_value
-    }
-    
+        
     # method to compute useful results from fitted model and output as dataframe
     rp_event <- return_period(mdl, ev, cov1, lower = lower)
     rp_alt = return_period(mdl, ev, cov2, lower = lower)

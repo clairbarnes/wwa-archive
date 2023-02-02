@@ -5,7 +5,7 @@ import xarray as xr; xr.set_options(keep_attrs = True)
 import pandas as pd
 import numpy as np
 
-from scipy.stats import norm, gamma
+from scipy.stats import norm, gamma, lognorm
 
 from functools import reduce
 
@@ -359,7 +359,8 @@ rcm = {'CCCma-CanRCM4' : "CanRCM4",
        'ICTP-RegCM4-7' : "RegCM4-7",
        'KNMI-RACMO22T' : "RACMO22T",
        'MPI-CSC-REMO2009' : "REMO2009",
-       'SMHI-RCA4' : "RCA4"}
+       'SMHI-RCA4' : "RCA4",
+       'UCAN-WRF341I' : "WRF341I"}
 
 # method to decode filename into model name
 def cordex_model(fnm): return gcm[fnm.split("_")[2]]+"_"+fnm.split("_")[4][:-4]+"_"+rcm[fnm.split("_")[5]]

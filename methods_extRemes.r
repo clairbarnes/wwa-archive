@@ -258,8 +258,8 @@ prob_ratio <- function(mdl, value, cov1, cov2, lower = F) {
 fit_results <- function(mdl, event_value, cov1, cov2, lower = F, dI_rel = F) {
         
     # method to compute useful results from fitted model and output as dataframe
-    rp_event <- return_period(mdl, ev, cov1, lower = lower)
-    rp_alt = return_period(mdl, ev, cov2, lower = lower)
+    rp_event <- return_period(mdl, event_value, cov1, lower = lower)
+    rp_alt = return_period(mdl, event_value, cov2, lower = lower)
     pr <- rp_alt / rp_event
     
     dI <- delta_I(mdl, rp_event, cov1, cov2, rel = dI_rel, lower = lower)
@@ -367,7 +367,7 @@ stransf <- function(mdl, covariate = NA, lower = F) {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Nonstationary normal distribution with fixed dispersion (as fitted by climate explorer)
 
-norm_fixeddisp <- function(pars = c(mu0, sigma0, shape, alpha), covariate, x) {
+norm_fixeddisp <- function(pars = c(mu0, sigma0, alpha), covariate, x) {
     
     loc = pars["mu0"] * exp(pars["alpha"] * covariate / pars["mu0"])
     scale = pars["sigma0"] * exp(pars["alpha"] * covariate / pars["mu0"])
@@ -376,7 +376,7 @@ norm_fixeddisp <- function(pars = c(mu0, sigma0, shape, alpha), covariate, x) {
     return(-sum(dnorm(x, mean = loc, sd = scale, log = T)))
 }
       
-norm_shift <- function(pars = c(mu0, sigma0, shape, alpha), covariate, x) {
+norm_shift <- function(pars = c(mu0, sigma0, alpha), covariate, x) {
     
     loc = pars["mu0"] + pars["alpha"] * covariate
     scale = pars["sigma0"]
@@ -385,7 +385,7 @@ norm_shift <- function(pars = c(mu0, sigma0, shape, alpha), covariate, x) {
     return(-sum(dnorm(x, mean = loc, sd = scale, log = T)))
 }
 
-norm_scale <- function(pars = c(mu0, sigma0, shape, alpha), covariate, x) {
+norm_scale <- function(pars = c(mu0, sigma0, alpha), covariate, x) {
     
     loc = pars["mu0"]
     scale = pars["sigma0"] + pars["alpha"] * covariate
@@ -395,7 +395,7 @@ norm_scale <- function(pars = c(mu0, sigma0, shape, alpha), covariate, x) {
 }
     
     
-norm_shiftscale <- function(pars = c(mu0, sigma0, shape, alpha, beta), covariate, x) {
+norm_shiftscale <- function(pars = c(mu0, sigma0, alpha, beta), covariate, x) {
     
     loc = pars["mu0"] + pars["alpha"] * covariate
     scale = pars["sigma0"] + pars["beta"] * covariate
@@ -405,17 +405,17 @@ norm_shiftscale <- function(pars = c(mu0, sigma0, shape, alpha, beta), covariate
 }
     
     
-fnorm <- function(x, covariate, data, type = "shift", method = "MLE", optim.method = "Nelder-Mead", init = NA, ...) {
+fnorm <- function(x, covariate, data, type = "shift", method = "MLE", optim.method = "L-BFGS-B", init = NA, ...) {
     
     mtype <- paste0("norm_", type)
     fun <- get(mtype)
     
-    if(is.na(init)) { init <- c(mu0 = mean(data[,x]), sigma0 = sd(data[,x]), alpha = 0) }
+    if(is.na(init[1])) { init <- c(mu0 = mean(data[,x]), sigma0 = sd(data[,x]), alpha = 0) }
     
     if((type == "shiftscale") & !all(grepl("beta", init))) { init <- c(init, beta = 0) }
-    
+        
     # need to sort out a better way to estimate starting parameters
-    res <- list("results" = optim(par = init, fun, covariate = data[,covariate], x = data[,x]), method = optim.method, ...)
+    res <- list("results" = optim(par = init, fun, covariate = data[,covariate], x = data[,x]), method = optim.method, lower = c(-Inf, 0, -Inf), ...)
     res[["type"]] <- mtype
     res[["x"]] <- data[,x]
     res[["cov.data"]] <- data

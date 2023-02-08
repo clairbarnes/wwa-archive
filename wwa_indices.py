@@ -58,24 +58,6 @@ def get_spi(pr, months = range(1,13), calibration_period = slice("1980", "2010")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-# CDF of generalised logistic function used with PWM parametrisation (replicates that used in R)
-def hosking_cdf(x, k, loc, scale):
-    
-    x_scaled = (x-loc) / scale
-    
-    if k == 0:
-        y = x_scaled
-    else:
-        # if scaled value is greater than 1, replace with 0.99999 (otherwise log is NA):
-        # this occurs when observed value falls above range of calibration distribution
-        x_scaled = k*x_scaled
-        x_scaled[x_scaled >= 1] = 0.99999
-        y = -np.log(1 - x_scaled) / k
-        
-    Fx = 1/(1+np.exp(-y))
-            
-    return Fx
-
 
 def get_spei(eff_pr, months = range(1,13), calibration_period = slice("1980", "2010")):
     
@@ -100,7 +82,7 @@ def get_spei(eff_pr, months = range(1,13), calibration_period = slice("1980", "2
                               input_core_dims = [["time"]], output_core_dims = [["dparams"]], vectorize = True).assign_coords(dparams = ["k", "loc", "scale"])
         
         # running without dry-month normalisation for now - check if needed for this dataset
-        spei_m = xr.apply_ufunc(lambda pr, dparams : norm.ppf(hosking_cdf(pr, *dparams)), epr_m, pars, 
+        spei_m = xr.apply_ufunc(lambda pr, dparams : norm.ppf(glo.cdf(pr, *dparams)), epr_m, pars, 
                                 input_core_dims=[["time"],["dparams"]], output_core_dims=[["time"]], vectorize = True).assign_coords(time = epr_m.time)
         
         # replace +ve (-ve) infinite values with finite maximum (minimum) in each grid cell

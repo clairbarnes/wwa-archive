@@ -41,7 +41,13 @@ warnings.filterwarnings("ignore", message = ".+Results from 'centroid' are likel
 
 from  IPython.display import clear_output
 
-###############################################################################################################
+
+####################################################################################################################
+# update smoothed GMST covariate series with latest data from climate explorer
+
+def refresh_gmst(): ! wget https://climexp.knmi.nl/data/igiss_al_gl_a_4yrlo.dat -O /home/clair/wwa/90_data/gmst.dat
+
+####################################################################################################################
 ## GOODNESS OF FIT
 
 def qqplot(ts, ax = None, dist = norm, marker = ".", ax_labels = True, **kwargs): 

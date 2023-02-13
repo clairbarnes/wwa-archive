@@ -45,7 +45,7 @@ from  IPython.display import clear_output
 ####################################################################################################################
 # update smoothed GMST covariate series with latest data from climate explorer
 
-def refresh_gmst(): ! wget https://climexp.knmi.nl/data/igiss_al_gl_a_4yrlo.dat -O /home/clair/wwa/90_data/gmst.dat
+# def refresh_gmst(): ! wget https://climexp.knmi.nl/data/igiss_al_gl_a_4yrlo.dat -O /home/clair/wwa/90_data/gmst.dat
 
 ####################################################################################################################
 ## GOODNESS OF FIT
@@ -185,6 +185,13 @@ def sc_xlabels(dates, ax = None):
     
 # method to get DOY offset for years starting other than in January
 def y_offset(months): return datetime(2020,months,1).timetuple().tm_yday
+    
+    
+# quickly plot a fitted polynomial
+def xyline(x, y, ax = None, npoly = 1, **plot_kwargs):
+    
+    if not ax: fig, ax = plt.subplots(figsize = (5,3))
+    ax.plot(np.sort(x), np.poly1d(np.polyfit(x, y, npoly))(np.sort(x)), **plot_kwargs)
     
 ###############################################################################################################
 ## MISC

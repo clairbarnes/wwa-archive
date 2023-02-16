@@ -1,4 +1,4 @@
-# scripturl01 :: http://climexp.knmi.nl/getindices.cgi?STATION=smoothed_GMST&TYPE=i&WMO=NASAData/giss_al_gl_a_4yrlo&id=f03907b406f8c03dec94553ef6c702e3
+# scripturl01 :: http://climexp.knmi.nl/getindices.cgi?STATION=smoothed_GMST&TYPE=i&WMO=NASAData/giss_al_gl_a_4yrlo&id=62f4b5a82fde776a4c64f0ca33646aa0
 # requiring at least 0.25 fraction valid points
 # Ta [Celsius] annual mean of GISTEMP global Ts+dSST temperature anomaly
 # file :: giss_al_gl_m_4yrlo.dat
@@ -7,11 +7,11 @@
 # institution :: KNMI Climate Explorer and NASA/GISS
 # contact :: https://www.giss.nasa.gov/staff/rruedy.html
 # references :: Hansen, J., R. Ruedy, M. Sato, and K. Lo, 2010: Global surface temperature change, Rev. Geophys., 48, RG4004, doi:10.1029/2010RG000345
-# source :: GISTEMP Team, 2018: GISS Surface Temperature Analysis (GISTEMP). NASA Goddard Institute for Space Studies. Dataset accessed 2023-01-25 22:09:11
+# source :: GISTEMP Team, 2018: GISS Surface Temperature Analysis (GISTEMP). NASA Goddard Institute for Space Studies. Dataset accessed 2023-02-10 22:51:52
 # source_url :: http://data.giss.nasa.gov/gistemp/
 # climexp_url :: https://climexp.knmi.nl/getindices.cgi?NASAData/giss_al_gl_m
 # operation :: each calendar month lo-pass filtered with a    4-yr running-mean filter
-# history :: user sager 2023-01-25 22:09:13 /nobackup_1/users/sager/ClimateExplorer/climexp_numerical/LINUX/daily2longer giss_al_gl_m_4yrlo.dat 1 mean minfac 25\nuser sager 2023-01-25 22:09:13 /nobackup_1/users/sager/ClimateExplorer/climexp_numerical/LINUX/filteryearseries lo running-mean 4 giss_al_gl_m.dat minfac 25 minfacsum 25\nretrieved and converted 2023-01-25 22:09:11
+# history :: user sager 2023-02-10 22:51:54 /nobackup_1/users/sager/ClimateExplorer/climexp_numerical/LINUX/daily2longer giss_al_gl_m_4yrlo.dat 1 mean minfac 25\nuser sager 2023-02-10 22:51:54 /nobackup_1/users/sager/ClimateExplorer/climexp_numerical/LINUX/filteryearseries lo running-mean 4 giss_al_gl_m.dat minfac 25 minfacsum 25\nretrieved and converted 2023-02-10 22:51:52
  1879 -0.1658333    
  1880 -0.1225000    
  1881 -0.1166667    

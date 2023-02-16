@@ -59,6 +59,8 @@ def ns_mle(x0, covariate, x, dist, fittype):
 # Univariate fitting method for Pandas DataFrame
 def ns_fit(dist, fittype, data, cov_name, var_name, solver = "Nelder-Mead", **optim_kwargs):
     
+    data = data.dropna(axis = 0, how = "any")
+    
     # initial parameters need to be passed as mu, sigma, alpha, shape, beta
     covariate = data[cov_name]
     x = data[var_name]
@@ -142,7 +144,10 @@ def ns_mapfit(dist, fittype, da, covariate, solver = "Nelder-Mead", **optim_kwar
     
     # add named parameters to output, to avoid any possible confusion
     ml_fit = ml_fit.assign_coords(pars = ["status", "nll", "mu", "sigma", "alpha", "shape", "beta"][:len(ml_fit.pars)]).rename("ml_fit")
-    ml_fit = ml_fit.assign_attrs(dist = dist.name, fittype = fittype, solver = solver, kwargs = optim_kwargs)
+    ml_fit = ml_fit.assign_attrs(dist = dist.name, fittype = fittype, solver = solver)
+    
+    if len(optim_kwargs) > 0:
+        print("Need to assign optim_kwargs as attributes - not yet implemented")
         
     return xr.merge([ml_fit, covariate.rename("covariate")])
 
@@ -150,9 +155,25 @@ def ns_mapfit(dist, fittype, da, covariate, solver = "Nelder-Mead", **optim_kwar
 #######################################################################################################################################
 ## SUPPORT METHODS (UNIVARIATE)
 
-def ns_pars(mdl, covariate = None):
+def pack_pars(pars, dist):
+    
+    # pack stationary parameters to pass to distribution: order depends on distribution used
+    if dist == lognorm:
+        pars = {"shape" : pars["scale"], "loc" : 0, "scale" : np.exp(pars["loc"])}
+    elif dist in [gev, genextreme, gamma]:
+        pars = {k : pars[k] for k in ["shape", "loc", "scale"]}
+    else:
+        pars = {k : pars[k] for k in ["loc", "scale"]}
+        
+    return pars
+
+
+
+def ns_pars(mdl, covariate = None, packed = False):
     
     # method to convert parameters to nonstationary location, scale etc
+    
+    if type(mdl) == xr.core.dataset.Dataset: mdl = mdl.ml_fit
     
     pars = mdl["results"].pars
     
@@ -173,25 +194,24 @@ def ns_pars(mdl, covariate = None):
         scale = pars["sigma"] + pars["beta"] * covariate
         
     if "shape" in pars.keys():
-        return { "loc" : loc, "scale" : scale, "shape" : shape }
+        pars = { "loc" : loc, "scale" : scale, "shape" : pars["shape"] }
     else:
-        return { "loc" : loc, "scale" : scale }
+        pars = { "loc" : loc, "scale" : scale }
+        
+    if packed:       
+        return pack_pars(pars, eval(mdl["dist"]))
+    else:
+        return pars
+        
     
-    
+
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 def return_level(mdl, rp, covariate = None, lower = False):
     
-    pars = ns_pars(mdl, covariate = covariate)
-    dist = eval(mdl["dist"])
-        
-    # pack stationary parameters: order depends on distribution used
-    if dist == lognorm:
-        pars = [pars["scale"], 0, np.exp(pars["loc"])]
-    elif dist in [gev, genextreme, gamma]:
-        pars = [pars["shape"], pars["loc"], pars["scale"]]
-    else:
-        pars = [pars["loc"], pars["scale"]]
+    pars = ns_pars(mdl, covariate = covariate, packed = True).values()
+    dist = eval(mdl["dist"])        
     
     # get return value for return period (scipy doesn't have argument to look at either tail)
     if lower:
@@ -217,17 +237,9 @@ def delta_I(mdl, rp, cov1, cov2, lower = False, relative = False):
 
 def return_period(mdl, event_value, covariate, lower = False):
         
-    pars = ns_pars(mdl, covariate = covariate)
+    pars = ns_pars(mdl, covariate = covariate, packed = True).values()
     dist = eval(mdl["dist"])
-    
-    # pack stationary parameters: order depends on distribution used
-    if dist == lognorm:
-        pars = [pars["scale"], 0, np.exp(pars["loc"])]
-    elif dist in [gev, genextreme, gamma]:
-        pars = [pars["shape"], pars["loc"], pars["scale"]]
-    else:
-        pars = [pars["loc"], pars["scale"]]
-    
+        
     # get exceedance probability for given event (scipy doesn't have argument to look at either tail)
     if lower:
         ep = dist.cdf(event_value, *pars)
@@ -305,7 +317,7 @@ def trendplot(mdl, cov1, cov2, loc1 = None, loc2 = None, ax = None, legend = Tru
     loc = ns_pars(mdl)["loc"]
     event_value = x[covariate == cov1]
     
-    # if not provided, use small bootstrap sample to compute
+    # if bounds for location not provided, could also use small bootstrap sample to compute
     if loc1 is None: loc1 = [ns_pars(mdl, cov1)["loc"]] + [np.nan]*2
     if loc2 is None: loc2 = [ns_pars(mdl, cov2)["loc"]] + [np.nan]*2
         
@@ -331,6 +343,60 @@ def trendplot(mdl, cov1, cov2, loc1 = None, loc2 = None, ax = None, legend = Tru
     ax.set_xlabel("GMST anomaly (smoothed)")
     
     
+
+def rlplot(mdl, cov1, cov2, event_value, lower = False, ax = None, ci_nsamp = 10, legend = True):
+    
+    # define values at which quantities are to be evaluated & plotted
+    x_obs = 1/np.linspace(1,0,num = len(mdl["data"])+1, endpoint = False)[1:]
+    x_est = np.array(list(np.arange(1.1,2,0.1)) + list(range(2,100)) + list(range(100,1000,10)) + list(range(1000,10000,100)))
+    x_ci = np.array([10,20,50,100,200,500,1000,2000,5000,10000])
+    
+    # # if log distribution, convert location to native units
+    # if mdl["dist"] in ["lognorm"]: loc, loc1, loc2 = [np.exp(l) for l in [loc, loc1, loc2]]
+    
+    # and now, plotting
+    if not ax: fig, ax = plt.subplots(figsize = (5,3), dpi = 100)
+    
+    ax.semilogx(x_obs, sorted(stransf(mdl, cov1, lower = lower), reverse = lower), ls = "", marker = ".", color = "firebrick")
+    ax.plot(x_obs, sorted(stransf(mdl, cov2, lower = lower), reverse = lower), ls = "", marker = ".", color = "blue")
+
+    ax.axhline(event_value, color = "magenta", label = "Observed event", lw = 1)
+    ax.plot(x_est, return_level(mdl, x_est, cov1, lower = lower), color = "firebrick", label = "Event in current climate")
+    ax.plot(x_est, return_level(mdl, x_est, cov2, lower = lower), color = "blue", label = "Counterfactual event")
+    
+    # if not provided, use small bootstrap sample to get confidence intervals
+    df = mdl["data"][[mdl["cov_name"], mdl["var_name"]]]
+    boot_ci_1 = []
+    boot_ci_2 = []
+    for i in range(ci_nsamp):
+        boot_df = df.iloc[np.random.choice(len(df), size = len(df)),:]
+        boot_fit = ns_fit(eval(mdl["dist"]), mdl["fittype"], boot_df, mdl["cov_name"], mdl["var_name"], solver = mdl["solver"], **mdl["kwargs"])
+        boot_ci_1.append(return_level(boot_fit, x_ci, covariate = cov1, lower = lower))
+        boot_ci_2.append(return_level(boot_fit, x_ci, covariate = cov2, lower = lower))
+
+    ci1 = np.quantile(np.column_stack(boot_ci_1), [0.025, 0.975], axis = 1)
+    ci2 = np.quantile(np.column_stack(boot_ci_2), [0.025, 0.975], axis = 1)
+    
+    ax.plot(x_ci, ci1.transpose(), color = "firebrick", ls = "--", alpha = 0.5)
+    ax.plot(x_ci, ci2.transpose(), color = "blue", ls = "--", alpha = 0.5)
+    
+    # add rug
+    rp1, rp2 = [return_period(mdl, covariate = c, event_value = event_value, lower = lower) for c in [cov1, cov2]]
+    
+    y0 = ax.get_xlim()[0]
+    ax.plot(rp1, y0, marker = "|", mew = 3, ms = 10, color = "firebrick")
+    ax.plot(rp2, y0, marker = "|", mew = 3, ms = 10, color = "blue")
+    
+    ax.set_xlim(None, 10e3)
+    ax.set_xlabel("Return period (years)")
+    
+    if legend:
+        ax.legend()
+    
+    
+    
+    
+    
     
 #######################################################################################################################################
 ## SUPPORT METHODS (MAPS)
@@ -350,11 +416,11 @@ def ns_parmap(mdl, covariate = None):
         loc = mdl.sel(pars = "mu") + mdl.sel(pars = "alpha") * covariate
         scale = mdl.sel(pars = "sigma") + mdl.sel(pars = "beta") * covariate
         
-    loc = loc.rename("location").assign_attrs(long_name = "Location parameter")
-    scale = scale.rename("scale").assign_attrs(long_name = "Scale parameter")
+    loc = loc.rename("location").assign_attrs(long_name = "Location parameter").squeeze(drop = True).reset_coords(drop = True)
+    scale = scale.rename("scale").assign_attrs(long_name = "Scale parameter").squeeze(drop = True).reset_coords(drop = True)
     
     if "shape" in mdl.pars:
-        return xr.Dataset({ "location" : loc, "scale" : scale, "shape" : mdl.sel(pars = "shape").reset_coords(drop = True).rename("shape").assign_attrs(long_name = "Shape parameter", units = "") })
+        return xr.Dataset({ "location" : loc, "scale" : scale, "shape" : mdl.sel(pars = "shape", drop = True).reset_coords(drop = True).rename("shape").assign_attrs(long_name = "Shape parameter", units = "") })
     else:
         return xr.Dataset({ "location" : loc, "scale" : scale })
     
@@ -366,8 +432,9 @@ def rlmap(mdl, rp, covariate, lower = False):
     dist = eval(mdl.dist)
     pars = ns_parmap(mdl, covariate).squeeze(drop = True)
     
-    print(pars)
-    
+    if type(rp) in [int, float]: rp = xr.ones_like(mdl.isel(pars = 0)) * rp
+    rp = rp.squeeze(drop = True)
+        
     # pack stationary parameters: order depends on distribution used
     if dist == lognorm:
         pars = [pars["scale"], xr.zeros_like(pars["scale"]), np.exp(pars["location"])]
@@ -377,14 +444,15 @@ def rlmap(mdl, rp, covariate, lower = False):
         pars = [pars["location"], pars["scale"]]
         
     if lower:
-        rl = xr.apply_ufunc(lambda pars : dist.ppf(1/rp, *pars), pars, input_core_dims = [["params"]], vectorize = True)
+        rl = xr.apply_ufunc(lambda rp, pars : dist.ppf(1/rp, *pars), rp, xr.concat(pars, "params"), input_core_dims = [[], ["params"]], vectorize = True)
     else:
-        rl = xr.apply_ufunc(lambda pars : dist.isf(1/rp, *pars), pars, input_core_dims = [["params"]], vectorize = True)
+        rl = xr.apply_ufunc(lambda rp, pars : dist.isf(1/rp, *pars), rp, xr.concat(pars, "params"), input_core_dims = [[], ["params"]], vectorize = True)
         
-    return xr.DataArray(rl, dims = mdl.isel(pars = 0).dims, coords = mdl.isel(pars = 0).coords).reset_coords(drop = True).assign_attrs(long_name = str(rp)+"-year return level", units = mdl.units).rename("rl")
+    return xr.DataArray(rl, dims = mdl.isel(pars = 0).dims, coords = mdl.isel(pars = 0).coords).reset_coords(drop = True).assign_attrs(long_name = "Return level", units = mdl.units).rename("rl")
 
 
 def dImap(mdl, rp, cov1, cov2, lower = False, relative = False):
+    
     
     rl1 = rlmap(mdl, rp, cov1, lower = lower)
     rl2 = rlmap(mdl, rp, cov2, lower = lower)
@@ -428,3 +496,41 @@ def prmap(mdl, event_value, cov1, cov2, lower = False):
     rp2 = rpmap(mdl, event_value, cov2)
 
     return (rp2 / rp1).rename("prob_ratio").assign_attrs(long_name = "Probability ratio", units = "")
+
+
+#######################################################################################################################################
+## TRANSFORM DATA TO STATIONARITY
+
+def stransf(mdl, covariate = None, lower = False):
+    
+    # use PIT to transform to standard distribution
+
+    pars = ns_pars(mdl, packed = True)
+    x = mdl["data"][[mdl["var_name"]]].values.flatten()
+    dist = eval(mdl["dist"])
+    
+    # parameters of target stationary distribution (set to standard form if not provided)
+    if not covariate:
+        s_pars = {"lognorm" : [1], "gev" : [0], "genextreme" : [0], "gamma" : [1], "norm" : []}[dist.name]
+    else:
+        s_pars = ns_pars(mdl, covariate, packed = True).values()
+
+    # pack stationary parameters to pass to distribution: order depends on distribution used
+    if dist == lognorm:
+        pars = [pars["scale"], 0, np.exp(pars["loc"])]
+    elif dist in [gev, genextreme]:
+        pars = [pars["shape"], pars["loc"], pars["scale"]]
+    elif dist in [gamma]:
+        pars = [pars["shape"], pars["loc"], pars["scale"]]
+    else:
+        pars = [pars["loc"], pars["scale"]]
+        
+    # get PIT for given event (scipy doesn't have argument to look at either tail)
+    if lower:
+        ep = dist.cdf(x, *pars)
+        pit = dist.ppf(ep, *s_pars)
+    else:
+        ep = dist.sf(x, *pars)
+        pit = dist.isf(ep, *s_pars)
+        
+    return pit

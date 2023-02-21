@@ -1,6 +1,6 @@
-# contact :: CORDEX pet-ond_SAM-44_NOAA-GFDL-GFDL-ESM2M_rcp85_r1i1p1 OND cwb central South America drought 2023, c.barnes22@imperial.ac.uk 
-# cwb [mm/day] OND mean climatic water balance (pr - evspsblpot) at CSA-drought_cwb-ond_SAM-44_NOAA-GFDL-GFDL-ESM2M_rcp85_r1i1p1_SMHI-RCA4
-# year cwb
+# contact :: CORDEX pet-ond_SAM-44_NOAA-GFDL-GFDL-ESM2M_rcp85_r1i1p1 OND effective precipitation (pr - evspsbl) central South America drought 2023, c.barnes22@imperial.ac.uk 
+# eff_precip [mm/day] OND effective precip at CSA-drought_effpr-ond_SAM-44_NOAA-GFDL-GFDL-ESM2M_rcp85_r1i1p1_SMHI-RCA4
+# year eff_precip
 1951 -2.233560787983614
 1952 -2.0558096411655664
 1953 -1.884724862761169

@@ -1,6 +1,6 @@
-# contact :: HighResMIP MPI-ESM1-2-XR OND effective precip (pr - evspsbl) central South America drought 2023, c.barnes22@imperial.ac.uk 
-# eff_precip [mm/day] OND mean effective precipitation rate at CSA-drought_effpr-ond_highresSST_MPI-ESM1-2-XR
-# year eff_precip
+# contact :: HighResMIP HadGEM3-GC31-LM OND tmean central South America drought 2023, c.barnes22@imperial.ac.uk 
+# tmean [degC] OND mean temperature at CSA-drought_tas-ond_highresSST_HadGEM3-GC31-LM
+# year tmean
 1951 20.92691
 1952 19.95191
 1953 19.98218

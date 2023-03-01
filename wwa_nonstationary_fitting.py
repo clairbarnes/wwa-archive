@@ -309,7 +309,7 @@ def boot_results(mdl, cov1, cov2, event_value = np.nan, rp = np.nan, lower = Fal
 #######################################################################################################################################
 ## PLOTTING METHODS
 
-def trendplot(mdl, cov1, cov2, loc1 = None, loc2 = None, ax = None, legend = True):
+def trendplot(mdl, cov1, cov2, loc1 = None, loc2 = None, lower = False, ax = None, legend = True):
     
     # extract necessary info from model
     covariate = mdl["data"][[mdl["cov_name"]]].values.flatten()
@@ -329,22 +329,24 @@ def trendplot(mdl, cov1, cov2, loc1 = None, loc2 = None, ax = None, legend = Tru
     
     # observed points
     ax.scatter(covariate, x, color = "k", marker = ".")
-    ax.scatter(cov1, event_value, color = "magenta", marker = ".")
+    ax.scatter(cov1, event_value, color = "magenta", marker = "o")
     
     # fitted location and return levels
     xyline(covariate, loc, ax, 2, ls = "--", color = "k", label = "$\mu'$")
-    xyline(covariate, return_level(mdl, 6, lower = True), ax, ls = "--", color = "blue", label = "6-year event")
-    xyline(covariate, return_level(mdl, 40, lower = True), ax, ls = "--", color = "blue", alpha = 0.5, label = "40-year event")
+    xyline(covariate, return_level(mdl, 6, lower = lower), ax, ls = "--", color = "blue", label = "6-year event")
+    xyline(covariate, return_level(mdl, 40, lower = lower), ax, ls = "--", color = "blue", alpha = 0.5, label = "40-year event")
     
     # bounds for location
-    ax.plot([cov1]*3, loc1, color = "k") #, marker = "_", ms = 10)
-    ax.plot([cov2]*3, loc2, color = "k") #, marker = "_", ms = 10)
+    ax.plot([cov1]*3, loc1, color = "k", marker = "_", ms = 10)
+    ax.plot([cov2]*3, loc2, color = "k", marker = "_", ms = 10)
     
     ax.set_xlabel("GMST anomaly (smoothed)")
     
     
 
-def rlplot(mdl, cov1, cov2, event_value, lower = False, ax = None, ci_nsamp = 10, legend = True):
+def rlplot(mdl, cov1, cov2, event_value, lower = False, ax = None, ci_nsamp = 10, legend = True, seed = 1):
+    
+    random.seed(seed)
     
     # define values at which quantities are to be evaluated & plotted
     x_obs = 1/np.linspace(1,0,num = len(mdl["data"])+1, endpoint = False)[1:]
@@ -487,7 +489,7 @@ def rpmap(mdl, event_value, covariate, lower = False):
     else:
         ep = xr.apply_ufunc(lambda ev, pars : dist.sf(ev, *pars), event_value, xr.concat(pars, "params"), input_core_dims = [[],["params"]], vectorize = True)
     
-    return 1/ep.rename("rp").assign_attrs(long_name = "Return period (years)").reset_coords(drop = True)
+    return 1/ep.rename("rp").assign_attrs(long_name = "Return period", units = "years").reset_coords(drop = True)
 
 
 def prmap(mdl, event_value, cov1, cov2, lower = False):

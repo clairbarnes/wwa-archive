@@ -161,7 +161,7 @@ return_level <- function(mdl, rp, covariate, lower = F) {
         pars <- sgev_pars(mdl, covariate = covariate)
         rl <- qnorm(1/rp, mean = pars$loc, sd = pars$scale, lower.tail = lower)
     } else { 
-        print("Check rlevd behaviour for lower tails")
+        if(lower) { print("Check rlevd behaviour for lower tails") }
         pars <- sgev_pars(mdl, covariate = covariate)
         rl <- rlevd(rp, loc = pars$loc, scale = pars$scale, shape = pars$shape)
     }
@@ -287,10 +287,10 @@ gev_fixeddisp <- function(pars = c(mu0, sigma0, shape, alpha), covariate, x) {
     return(-sum(devd(x, loc = loc, scale = scale, shape = shape, log = T)))
 }
 
-fevd_fixeddisp <- function(x, covariate, data, method = "MLE", ...) {
+fevd_fixeddisp <- function(x, covariate, data, method = "MLE", solver = "L-BFGS-B", ...) {
     
     res <- list("results" = optim(par = c(mu0 = mean(data[,x]), sigma0 = sd(data[,x]), shape = 0, alpha = 0), gev_fixeddisp, 
-                                  covariate = data[,covariate], x = data[,x]))
+                                  covariate = data[,covariate], x = data[,x], method = solver, ...))
     res[["type"]] <- "GEV_fixeddisp"
     res[["x"]] <- data[,x]
     res[["cov.data"]] <- data

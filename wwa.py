@@ -43,11 +43,6 @@ from  IPython.display import clear_output
 
 
 ####################################################################################################################
-# update smoothed GMST covariate series with latest data from climate explorer
-
-# def refresh_gmst(): ! wget https://climexp.knmi.nl/data/igiss_al_gl_a_4yrlo.dat -O /home/clair/wwa/90_data/gmst.dat
-
-####################################################################################################################
 ## GOODNESS OF FIT
 
 def qqplot(ts, ax = None, dist = norm, marker = ".", ax_labels = True, **kwargs): 
@@ -352,6 +347,8 @@ def nearest_px(x,y,da, xcoord = "longitude", ycoord = "latitude", return_map = F
 gcm = {'CCCma-CanESM2' : "CanESM2",
        'CNRM-CERFACS-CNRM-CM5' : "CNRM-CM5",
        'CSIRO-QCCCE-CSIRO-Mk3-6-0' : "CSIRO-Mk3-6-0",
+       'CSIRO-BOM-ACCESS1-0' : "ACCESS1-0",
+       'CSIRO-BOM-ACCESS1-3' : "ACCESS1-3",
        'ICHEC-EC-EARTH' : "EC-EARTH",
        'IPSL-IPSL-CM5A-LR' : "IPSL-CM5A-LR",
        'IPSL-IPSL-CM5A-MR' : "IPSL-CM5A-MR",
@@ -364,6 +361,8 @@ gcm = {'CCCma-CanESM2' : "CanESM2",
 
 rcm = {'CCCma-CanRCM4' : "CanRCM4",
        'CLMcom-CCLM4-8-17' : "CCLM4-8-17",
+       'CLMcom-CCLM4-8-17-CLM3-5' : "CCLM4-8-17",
+       'CLMcom-HZG-CCLM5-0-15' : "CCLM5-0-15",
        'CLMcom-KIT-CCLM5-0-15' : "CCLM5-0-15",
        'DMI-HIRHAM5' : "HIRHAM5",
        'GERICS-REMO2009' : "REMO2009",
@@ -373,7 +372,9 @@ rcm = {'CCCma-CanRCM4' : "CanRCM4",
        'KNMI-RACMO22T' : "RACMO22T",
        'MPI-CSC-REMO2009' : "REMO2009",
        'SMHI-RCA4' : "RCA4",
-       'UCAN-WRF341I' : "WRF341I"}
+       'UCAN-WRF341I' : "WRF341I",
+       'UNSW-WRF360J' : "WRF360J",
+       'UNSW-WRF360K' : "WRF360K"}
 
 # method to decode filename into model name
 def cordex_model(fnm): return gcm[fnm.split("_")[2]]+"_"+fnm.split("_")[4][:-4]+"_"+rcm[fnm.split("_")[5]]

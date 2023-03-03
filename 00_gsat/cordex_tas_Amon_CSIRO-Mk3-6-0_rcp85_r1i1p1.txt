@@ -1,3 +1,5 @@
+# contact :: CMIP5 GSAT, c.barnes22@imperial.ac.uk 
+# temperature [degree celsius] smoothed global surface air temperature anomaly at tas_Amon_CSIRO-Mk3-6-0_rcp85_r1i1p1.dat
 #year gsat
 1852 -1.056451666666657
 1853 -1.0262183333333148

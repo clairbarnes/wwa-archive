@@ -7,7 +7,7 @@
 results_file=cx-results_highresmip.txt
 
 # list of model:gmst pairs to loop over, separated with spaces
-model_list=p_rx2d_NZ_CMCC-CM2-VHR4 #`echo p_rx2d_NZ_MPI-ESM1-2-XR p_rx2d_NZ_EC-Earth3P-HR p_rx2d_NZ_CNRM-CM6-1-HR p_rx2d_NZ_HadGEM3-GC31-HM  p_rx2d_NZ_HadGEM3-GC31-MM`
+model_list=`echo p_rx2d_pr_EC-Earth3P-HR_NZ p_rx2d_pr_CMCC-CM2-VHR4_NZ p_rx2d_pr_CNRM-CM6-1-HR_NZ p_rx2d_pr_HadGEM3-GC31-MM_NZ p_rx2d_pr_HadGEM3-GC31-HM_NZ p_rx2d_pr_MPI-ESM1-2-XR_NZ`
 
 # list of parameter=value pairs to use in study, separated with spaces
 parameter_list=`echo distribution=gev fit_type=scale return_period=10 obs_start=1979 event_year=2023 lower_tail= restrain=0.4 include_event=on gmst_past=-1.2 gmst_fut=0.8 confint=95`

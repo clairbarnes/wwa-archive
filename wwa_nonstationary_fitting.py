@@ -363,8 +363,8 @@ def rlplot(mdl, cov1, cov2, event_value, lower = False, ax = None, ci_nsamp = 10
     ax.plot(x_obs, sorted(stransf(mdl, cov2, lower = lower), reverse = lower), ls = "", marker = ".", color = "blue")
 
     ax.axhline(event_value, color = "magenta", label = "Observed event", lw = 1)
-    ax.plot(x_est, return_level(mdl, x_est, cov1, lower = lower), color = "firebrick", label = "Event in current climate")
-    ax.plot(x_est, return_level(mdl, x_est, cov2, lower = lower), color = "blue", label = "Counterfactual event")
+    ax.plot(x_est, return_level(mdl, x_est, cov1, lower = lower), color = "firebrick", label = "In current climate")
+    ax.plot(x_est, return_level(mdl, x_est, cov2, lower = lower), color = "blue", label = "In counterfactual climate")
     
     # if not provided, use small bootstrap sample to get confidence intervals
     df = mdl["data"][[mdl["cov_name"], mdl["var_name"]]]

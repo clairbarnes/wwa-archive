@@ -189,6 +189,30 @@ def xyline(x, y, ax = None, npoly = 1, **plot_kwargs):
     ax.plot(np.sort(x), np.poly1d(np.polyfit(x, y, npoly))(np.sort(x)), **plot_kwargs)
     
 ###############################################################################################################
+## DROUGHT PLOTTING FUNCTIONS
+
+def drought_map(di, ax = None):
+    
+    dc = xr.apply_ufunc(np.digitize, di, kwargs={'bins': [-np.inf, -2, -1.55, -1.25, -.75, -.5]})
+    
+    if ax is None:
+        fig, ax = plt.subplots(ncols = 1, dpi = 100)
+    
+    drought_cmap = matplotlib.colors.ListedColormap(['darkred', 'red', 'orange', 'gold','yellow']); drought_cmap.set_over('honeydew')
+
+    cbar = dc.plot(ax = ax, cmap = drought_cmap, norm = matplotlib.colors.BoundaryNorm(np.arange(0.5,6.5,1), drought_cmap.N), add_colorbar = False)
+    return cbar    
+
+
+def drought_colorbar(cbar, ax, location = "bottom", label = "Drought classification", **cbar_kwargs): 
+    
+    cbar = plt.colorbar(cbar, ax = ax, location = location, ticks = list(range(1,6)), extend = "max", label = label, **cbar_kwargs)
+    if location == "bottom":
+        cbar.ax.set_xticklabels(["D" + str(x) for x in range(4,-1,-1)])
+    else:
+        cbar.ax.set_yticklabels(["D" + str(x) for x in range(4,-1,-1)])
+
+###############################################################################################################
 ## MISC
 
 def wrap_lon(ds):

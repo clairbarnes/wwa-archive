@@ -5,13 +5,13 @@ import xarray as xr; xr.set_options(keep_attrs = True)
 import pandas as pd
 import numpy as np
 
-from scipy.stats import norm, gamma, lognorm
+from scipy.stats import norm, gamma, lognorm, gaussian_kde as kde
 
 from functools import reduce
 
 from xclim.core.calendar import convert_calendar
 from xclim.core.units import convert_units_to
-
+from xclim.indices._conversion import potential_evapotranspiration
 
 import os; os.environ['PROJ_LIB'] = '/home/clair/miniconda3/envs/wwa/share/proj'                         # fixes error message on import of cartopy etc
 

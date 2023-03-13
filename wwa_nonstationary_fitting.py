@@ -343,6 +343,26 @@ def trendplot(mdl, cov1, cov2, loc1 = None, loc2 = None, lower = False, ax = Non
     ax.set_xlabel("GMST anomaly (smoothed)")
     
     
+    
+def time_trendplot(mdl, ax = None, event_year = None, lower = False):
+    
+    if not ax: fig, ax = plt.subplots(figsize = (5,3))
+    
+    ax.step(mdl["data"].index, mdl["data"][mdl["var_name"]], color = "k", where = "mid")
+    
+    mu = ns_pars(mdl)["loc"]
+    if mdl["dist"] in ["lognorm"]: mu = np.exp(mu)
+    mu.plot(ax = ax, color = "k", ls = "--", label = "_$\mu$")
+        
+    ax.plot(mdl["data"].index, return_level(mdl, 6, lower = lower), color = "blue", ls = "--", label = "6-year return level")
+    ax.plot(mdl["data"].index, return_level(mdl, 40, lower = lower), color = "blue", ls = "--", alpha = 0.5, label = "40-year return level")
+    
+    if not event_year: event_year = mdl["data"].index.max()
+    
+    ax.scatter(event_year, mdl["data"].loc[event_year, mdl["var_name"]], color = "magenta", label = str(event_year)+" event")
+    
+    
+    
 
 def rlplot(mdl, cov1, cov2, event_value, lower = False, ax = None, ci_nsamp = 10, legend = True, seed = 1):
     
@@ -520,6 +540,7 @@ def stransf(mdl, covariate = None, lower = False):
     # pack stationary parameters to pass to distribution: order depends on distribution used
     if dist == lognorm:
         pars = [pars["scale"], 0, np.exp(pars["loc"])]
+        x = np.exp(x)
     elif dist in [gev, genextreme]:
         pars = [pars["shape"], pars["loc"], pars["scale"]]
     elif dist in [gamma]:

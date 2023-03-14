@@ -5,9 +5,10 @@ import xarray as xr
 
 import matplotlib.pyplot as plt
 
-from scipy.stats import norm, gamma, lognorm, genextreme, genextreme as gev
+from scipy.stats import norm, gamma, lognorm, genextreme, genextreme as gev, gaussian_kde as kde
 from scipy.optimize import minimize
 from xclim.indices.stats import fit
+from statsmodels.distributions.empirical_distribution import ECDF as ecdf
 
 import random
 
@@ -21,9 +22,9 @@ def ns_mle(x0, covariate, x, dist, fittype):
     # Generic fitting method: can add extra distributions & fit types as needed
     
     # unpack nonstationary parameters
-    if dist in [norm, lognorm]:
+    if dist in [norm]:
         mu, sigma, alpha = x0[:3]
-    elif dist in [gev, genextreme, gamma]:
+    elif dist in [gev, genextreme, gamma, lognorm]:
         mu, sigma, alpha, shape = x0[:4]
             
     # convert to vector of stationary loc & scale
@@ -44,9 +45,7 @@ def ns_mle(x0, covariate, x, dist, fittype):
         return
         
     # pack stationary parameters  
-    if dist == lognorm:
-        pars = [scale, 0, np.exp(loc)]      # python uses an odd parametrisation, this gives same results as R
-    elif dist in [gev, genextreme, gamma]:
+    if dist in [gev, genextreme, gamma, lognorm]:
         pars = [shape, loc, scale]
     else:
         pars = [loc, scale]
@@ -69,7 +68,7 @@ def ns_fit(dist, fittype, data, cov_name, var_name, solver = "Nelder-Mead", **op
     if dist == norm: 
         init = [x.mean(), x.std(), 0]
     elif dist == lognorm:
-        init = [np.log(x).mean(), np.log(x).std(), 0]
+        init = [np.log(x).mean(), np.log(x).std(), 0, 0.5]
     elif dist in [gev, genextreme, gamma]:
         shape, loc, scale = dist.fit(x)
         init = [loc, scale, 0, shape]
@@ -158,9 +157,8 @@ def ns_mapfit(dist, fittype, da, covariate, solver = "Nelder-Mead", **optim_kwar
 def pack_pars(pars, dist):
     
     # pack stationary parameters to pass to distribution: order depends on distribution used
-    if dist == lognorm:
-        pars = {"shape" : pars["scale"], "loc" : 0, "scale" : np.exp(pars["loc"])}
-    elif dist in [gev, genextreme, gamma]:
+    if dist in [gev, genextreme, gamma, lognorm]:
+        # if not type(pars["loc"]) in [np.float64]: pars["shape"] = pd.DataFrame(pars)["shape"]
         pars = {k : pars[k] for k in ["shape", "loc", "scale"]}
     else:
         pars = {k : pars[k] for k in ["loc", "scale"]}
@@ -373,9 +371,6 @@ def rlplot(mdl, cov1, cov2, event_value, lower = False, ax = None, ci_nsamp = 10
     x_est = np.array(list(np.arange(1.1,2,0.1)) + list(range(2,100)) + list(range(100,1000,10)) + list(range(1000,10000,100)))
     x_ci = np.array([10,20,50,100,200,500,1000,2000,5000,10000])
     
-    # # if log distribution, convert location to native units
-    # if mdl["dist"] in ["lognorm"]: loc, loc1, loc2 = [np.exp(l) for l in [loc, loc1, loc2]]
-    
     # and now, plotting
     if not ax: fig, ax = plt.subplots(figsize = (5,3), dpi = 100)
     
@@ -405,7 +400,7 @@ def rlplot(mdl, cov1, cov2, event_value, lower = False, ax = None, ci_nsamp = 10
     # add rug
     rp1, rp2 = [return_period(mdl, covariate = c, event_value = event_value, lower = lower) for c in [cov1, cov2]]
     
-    y0 = ax.get_xlim()[0]
+    y0 = ax.get_ylim()[0]
     ax.plot(rp1, y0, marker = "|", mew = 3, ms = 10, color = "firebrick")
     ax.plot(rp2, y0, marker = "|", mew = 3, ms = 10, color = "blue")
     
@@ -526,27 +521,17 @@ def prmap(mdl, event_value, cov1, cov2, lower = False):
 def stransf(mdl, covariate = None, lower = False):
     
     # use PIT to transform to standard distribution
-
-    pars = ns_pars(mdl, packed = True)
     x = mdl["data"][[mdl["var_name"]]].values.flatten()
     dist = eval(mdl["dist"])
+    
+    # get nonstationary parameters for each observation
+    pars = ns_pars(mdl, packed = True).values()
     
     # parameters of target stationary distribution (set to standard form if not provided)
     if not covariate:
         s_pars = {"lognorm" : [1], "gev" : [0], "genextreme" : [0], "gamma" : [1], "norm" : []}[dist.name]
     else:
         s_pars = ns_pars(mdl, covariate, packed = True).values()
-
-    # pack stationary parameters to pass to distribution: order depends on distribution used
-    if dist == lognorm:
-        pars = [pars["scale"], 0, np.exp(pars["loc"])]
-        x = np.exp(x)
-    elif dist in [gev, genextreme]:
-        pars = [pars["shape"], pars["loc"], pars["scale"]]
-    elif dist in [gamma]:
-        pars = [pars["shape"], pars["loc"], pars["scale"]]
-    else:
-        pars = [pars["loc"], pars["scale"]]
         
     # get PIT for given event (scipy doesn't have argument to look at either tail)
     if lower:
@@ -557,3 +542,27 @@ def stransf(mdl, covariate = None, lower = False):
         pit = dist.isf(ep, *s_pars)
         
     return pit
+
+
+
+#######################################################################################################################################
+## EMPIRICAL EXCEEDANCE PROBABILITIES
+
+def kde_ep(y, y0, xmin = None, xmax = None, **kde_kwargs):
+    
+    if not xmin: xmin = y.min() - y.std()*2
+    if not xmax: xmax = y.max() + y.std()*2
+    x = np.linspace(xmin, xmax, 100)
+
+    y_kde = kde(y, **kde_kwargs)(x)             
+    return (y_kde / y_kde.sum()).cumsum()[np.abs(x - y0).argmin()]
+
+
+def ecdf_ep(y, y0, xmin = None, xmax = None):
+    
+    if not xmin: xmin = y.min() - y.std()*2
+    if not xmax: xmax = y.max() + y.std()*2
+    x = np.linspace(xmin, xmax, 100)
+
+    y_ecdf = ecdf(y)(x)
+    return y_ecdf[np.abs(x - y0).argmin()]

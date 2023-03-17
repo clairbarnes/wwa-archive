@@ -31,6 +31,7 @@ from datetime import datetime
 
 import matplotlib.pyplot as plt
 import matplotlib
+from matplotlib.patches import Rectangle
 matplotlib.rcParams['savefig.bbox'] = "tight"    # always save with tight bounding box
 matplotlib.rcParams["savefig.facecolor"] = "w"   # always save with white (rather than transparent) background
 

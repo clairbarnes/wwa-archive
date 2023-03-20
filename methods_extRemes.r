@@ -275,8 +275,8 @@ fit_results <- function(mdl, event_value, cov1, cov2, lower = F, dI_rel = F) {
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Nonstationary GEV with fixed dispersion (as fitted by climate explorer)
-
+# Nonstationary GEV with fixed dispersion (as fitted by climate explorer)                                            ####
+    
 gev_fixeddisp <- function(pars = c(mu0, sigma0, shape, alpha), covariate, x) {
     
     loc = pars["mu0"] * exp(pars["alpha"] * covariate / pars["mu0"])
@@ -428,67 +428,40 @@ fnorm <- function(x, covariate, data, type = "shift", method = "MLE", optim.meth
     
        
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Nonstationary gamma distribution with fixed dispersion (equivalent to that fitted by climate explorer)
+# Nonstationary gamma distribution (will always have fixed dispersion)
 
-gamma_fixeddisp <- function(pars = c(mu0, sigma0, shape, alpha), covariate, x) {
+gamma_fixeddisp <- function(pars = c(rate, shape, alpha), covariate, x) {
     
-    loc = pars["mu0"] * exp(pars["alpha"] * covariate / pars["mu0"])
-    scale = pars["sigma0"] * exp(pars["alpha"] * covariate / pars["mu0"])
+    # gamma distribution has fixed coefficient of variation, so shouldn't be necessary to fit location + scale: instead, let rate vary with covariate
+    ns_rate = pars["rate"] + pars["alpha"] * covariate
     shape = pars["shape"]
     
     # return negative log-likelihood to be minimised
-    return(-sum(log(dgamma((x - loc) / scale, shape = shape, log = F)/scale)))
-}
-      
-gamma_shift <- function(pars = c(mu0, sigma0, shape, alpha), covariate, x) {
-    
-    loc = pars["mu0"] + pars["alpha"] * covariate
-    scale = pars["sigma0"]
-    shape = pars["shape"]
-    
-    # return negative log-likelihood to be minimised
-    return(-sum(log(dgamma((x - loc) / scale, shape = shape, log = F)/scale)))
+    return(-sum(dgamma(x, shape = shape, rate = ns_rate, log = T)))
 }
 
-gamma_scale <- function(pars = c(mu0, sigma0, shape, alpha), covariate, x) {
-    
-    loc = pars["mu0"]
-    scale = pars["sigma0"] + pars["alpha"] * covariate
-    shape = pars["shape"]
-    
-    # return negative log-likelihood to be minimised
-    return(-sum(log(dgamma((x - loc) / scale, shape = shape, log = F)/scale)))
-}
     
     
-gamma_shiftscale <- function(pars = c(mu0, sigma0, shape, alpha, beta), covariate, x) {
+fgamma <- function(x, covariate, data, method = "MLE", type = "fixeddisp", optim.method = "Nelder-Mead", init = NA, ...) {
+        
+    mtype <- "gamma_fixeddisp"
     
-    loc = pars["mu0"] + pars["alpha"] * covariate
-    scale = pars["sigma0"] + pars["beta"] * covariate
-    shape = pars["shape"]
-    
-    # return negative log-likelihood to be minimised
-    return(-sum(log(dgamma((x - loc) / scale, shape = shape, log = F)/scale)))
-}
-    
-fgamma <- function(x, type = "shift", covariate, data, method = "MLE", optim.method = "Nelder-Mead", init = c(mu0 = 2, sigma0 = 0.5, shape = 2, alpha = 0), ...) {
-    
-    mtype <- paste0("gamma_", type)
-    fun <- get(mtype)
-    
-    if((type == "shiftscale") & !all(grepl("beta", init))) { init <- c(init, beta = 0) }
-    
+    if(is.na(init[1])) init <- c(fitdistr(data[,x], "gamma")$estimate, "alpha" = 0)
+            
     # need to sort out a better way to estimate starting parameters
-    res <- list("results" = optim(par = init, fun, covariate = data[,covariate], x = data[,x]), method = optim.method, ...)
-    res[["type"]] <- mtype
-    res[["x"]] <- data[,x]
-    res[["cov.data"]] <- data
-    res[["cov.name"]] <- covariate
-    res[["var.name"]] <- x
+    res <- list("results" = suppressWarnings(optim(par = init, gamma_fixeddisp, covariate = data[,covariate], x = data[,x], method = optim.method)),
+                fittype = method,
+                method = optim.method, 
+                type = mtype,
+                x = data[,x],
+                cov.data = data,
+                cov.name = covariate,
+                var.name = x,
+                ...)
     
     return(res)
 }
-    
+
     
     
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

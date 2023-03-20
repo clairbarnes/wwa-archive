@@ -22,9 +22,11 @@ def ns_mle(x0, covariate, x, dist, fittype):
     # Generic fitting method: can add extra distributions & fit types as needed
     
     # unpack nonstationary parameters
+    if dist in [gamma]:
+        
     if dist in [norm]:
         mu, sigma, alpha = x0[:3]
-    elif dist in [gev, genextreme, gamma, lognorm]:
+    elif dist in [gev, genextreme, lognorm]:
         mu, sigma, alpha, shape = x0[:4]
             
     # convert to vector of stationary loc & scale
@@ -56,6 +58,7 @@ def ns_mle(x0, covariate, x, dist, fittype):
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Univariate fitting method for Pandas DataFrame
+
 def ns_fit(dist, fittype, data, cov_name, var_name, solver = "Nelder-Mead", **optim_kwargs):
     
     data = data.dropna(axis = 0, how = "any")
@@ -67,11 +70,11 @@ def ns_fit(dist, fittype, data, cov_name, var_name, solver = "Nelder-Mead", **op
     # currently no option to provide initial estimates - use stationary parameters as initial fit
     if dist == norm: 
         init = [x.mean(), x.std(), 0]
-    elif dist in [gev, genextreme, gamma, lognorm]:
+    elif dist in [gev, genextreme]:
         shape, loc, scale = dist.fit(x)
         init = [loc, scale, 0, shape]
     else:
-        print(dist.name+" distribution not yet implemented")
+        print(dist.name+" distribution not yet implemented") # gamma & native lognormal still need work
         return
     
     # if needed, add beta to initial parameters

@@ -67,9 +67,7 @@ def ns_fit(dist, fittype, data, cov_name, var_name, solver = "Nelder-Mead", **op
     # currently no option to provide initial estimates - use stationary parameters as initial fit
     if dist == norm: 
         init = [x.mean(), x.std(), 0]
-    elif dist == lognorm:
-        init = [np.log(x).mean(), np.log(x).std(), 0, 0.5]
-    elif dist in [gev, genextreme, gamma]:
+    elif dist in [gev, genextreme, gamma, lognorm]:
         shape, loc, scale = dist.fit(x)
         init = [loc, scale, 0, shape]
     else:
@@ -566,3 +564,36 @@ def ecdf_ep(y, y0, xmin = None, xmax = None):
 
     y_ecdf = ecdf(y)(x)
     return y_ecdf[np.abs(x - y0).argmin()]
+
+
+
+#######################################################################################################################################
+## NONSTATIONARY GOODNESS OF FIT TESTING
+
+def ns_qqplot(mdl, cov1, ax = None, dist = norm, marker = ".", xyline = True, ax_labels = True, transform = None, **kwargs): 
+    
+    ts = mdl["data"][mdl["var_name"]].values
+    x = np.linspace(1,0,num = len(ts)+1, endpoint = False)[1:]
+    dist = eval(mdl["dist"])
+    fitted_pars = ns_pars(mdl, cov1, packed = True).values()
+    
+    ts_stationary = stransf(mdl, cov1)
+    fitted_x = dist.ppf(x, *fitted_pars)
+    
+    if transform:
+        ts_stationary = transform(ts_stationary)
+        fitted_x = transform(fitted_x)
+    
+    
+    if ax is None:
+        fig, ax = plt.subplots(figsize = (5,5), dpi = 100, facecolor = "w")
+        
+    ax.scatter(fitted_x, sorted(ts_stationary, reverse = True), marker = marker, **kwargs)
+        
+    if xyline:
+        vmin = min([ts_stationary.min(), fitted_x.min()])
+        vmax = max([ts_stationary.max(), fitted_x.max()])
+        ax.plot((vmin, vmax), (vmin, vmax), alpha = 0.5, color = "k", lw = 0.5)
+    
+    if ax_labels:
+        ax.set_xlabel("Fitted"); ax.set_ylabel("Observed")

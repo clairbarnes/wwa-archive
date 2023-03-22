@@ -20,14 +20,14 @@ import sys; sys.path.append('/home/clair/wwa'); from wwa import xyline
 def ns_mle(x0, covariate, x, dist, fittype):
     
     # Generic fitting method: can add extra distributions & fit types as needed
-    
-    # unpack nonstationary parameters
-    if dist in [gamma]:
         
     if dist in [norm]:
         mu, sigma, alpha = x0[:3]
-    elif dist in [gev, genextreme, lognorm]:
+    elif dist in [gev, genextreme]:
         mu, sigma, alpha, shape = x0[:4]
+    else:
+        print(dist.name+" not yet implemented")
+        return
             
     # convert to vector of stationary loc & scale
     if fittype == "shift":
@@ -278,8 +278,9 @@ def model_results(mdl, cov1, cov2, event_value = np.nan, rp = np.nan, lower = Fa
     
     res = { "fixed_value" : event_value, "rp_1" : rp1, "rp_2" : rp2, "pr" : pr,
             "fixed_rp" : rp, "rl_1" : rl1, "rl_2" : rl2, "dI" : dI }
+    nll = { "nll" : mdl["results"].fun }
 
-    return params | nspars_1 | nspars_2 | res
+    return params | nspars_1 | nspars_2 | res | nll
 
 
 def boot_results(mdl, cov1, cov2, event_value = np.nan, rp = np.nan, lower = False, relative_deltaI = False, nsamp = 1000, seed = 1):

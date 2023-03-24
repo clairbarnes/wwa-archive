@@ -417,6 +417,7 @@ fnorm <- function(x, covariate, data, type = "shift", method = "MLE", optim.meth
     # need to sort out a better way to estimate starting parameters
     res <- list("results" = optim(par = init, fun, covariate = data[,covariate], x = data[,x]), method = optim.method, lower = c(-Inf, 0, -Inf), ...)
     res[["type"]] <- mtype
+    res[["dist"]] <- "norm"
     res[["x"]] <- data[,x]
     res[["cov.data"]] <- data
     res[["cov.name"]] <- covariate

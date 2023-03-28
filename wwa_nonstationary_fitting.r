@@ -195,6 +195,8 @@ model_res <- function(mdl_x, x, cov1_hist, cov2_hist = 0, dI_rel = F) {
     
     res <- data.frame("dist" = c(mdl_x$dist),
                       "fit_type" = c(mdl_x$type),
+                      "mu0" = c(mdl_x$par["mu0"]),
+                      "sigma0" = c(mdl_x$par["sigma0"]),
                       "alpha" = c(mdl_x$par["alpha"]),
                       "beta" = c(mdl_x$par["beta"]),
                       "var/disp" = c(vpar_x),
@@ -231,6 +233,8 @@ jmodel_res <- function(mdl_x, mdl_y, copula, x, y, cov1_hist, cov2_hist = 0, dI_
     
     res_joint <- data.frame("dist" = c(class(cfit)),
                             "fit_type" = c("stationary"),
+                            "mu0" = c(NA),
+                            "sigma0" = c(NA),
                             "alpha" = c(NA),
                             "beta" = c(NA),
                             "var/disp" = c(getSigma(copula)[1,2]),

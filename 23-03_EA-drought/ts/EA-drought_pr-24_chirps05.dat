@@ -1,6 +1,6 @@
-# CenTrends used prior to 1981: CHIRPS from 1981 onwards 
-# pr24 [mm/month] 2-year mean precipitation (Jan-Dec) at EA-drought_pr24_chirps05
-# year pr24
+# contact :: CHIRPS 0.5deg 24m accumulated precip - East Africa drought 2023, c.barnes22@imperial.ac.uk 
+# pr_24 [mm] 2-year accumulated precipitation at EA-drought_pr-24_chirps05
+# year pr_24
 1982 1167.4279
 1983 944.60266
 1984 709.9393

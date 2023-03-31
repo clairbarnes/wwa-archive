@@ -177,7 +177,7 @@ def ns_pars(mdl, covariate = None, packed = False):
     pars = mdl["results"].pars
     
     # if no covariate provided, return result for all values used in fitting
-    if not covariate: covariate = mdl["data"][mdl["cov_name"]]
+    if covariate is None: covariate = mdl["data"][mdl["cov_name"]]
     
     if mdl["fittype"] == "shift":
         loc = pars["mu"] + pars["alpha"] * covariate
@@ -344,7 +344,7 @@ def trendplot(mdl, cov1, cov2, loc1 = None, loc2 = None, lower = False, ax = Non
     
     
     
-def time_trendplot(mdl, ax = None, event_year = None, lower = False):
+def time_trendplot(mdl, ax = None, event_year = None, lower = False, loc_colour = "k", rl_colour = "blue"):
     
     if not ax: fig, ax = plt.subplots(figsize = (5,3))
     
@@ -352,10 +352,10 @@ def time_trendplot(mdl, ax = None, event_year = None, lower = False):
     
     mu = ns_pars(mdl)["loc"]
     if mdl["dist"] in ["lognorm"]: mu = np.exp(mu)
-    mu.plot(ax = ax, color = "k", ls = "--", label = "_$\mu$")
+    mu.plot(ax = ax, color = loc_colour, ls = "--", label = "_$\mu$")
         
-    ax.plot(mdl["data"].index, return_level(mdl, 6, lower = lower), color = "blue", ls = "--", label = "6-year return level")
-    ax.plot(mdl["data"].index, return_level(mdl, 40, lower = lower), color = "blue", ls = "--", alpha = 0.5, label = "40-year return level")
+    ax.plot(mdl["data"].index, return_level(mdl, 6, lower = lower), color = rl_colour, ls = "--", label = "6-year return level")
+    ax.plot(mdl["data"].index, return_level(mdl, 40, lower = lower), color = rl_colour, ls = "--", alpha = 0.5, label = "40-year return level")
     
     if not event_year: event_year = mdl["data"].index.max()
     

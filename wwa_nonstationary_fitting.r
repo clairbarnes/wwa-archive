@@ -55,7 +55,7 @@ ns_mle <- function(pars = c(mu0, sigma0, alpha), cov1, x, dist, fittype) {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # wrapper to fit nonstationary fixed-dispersion model
 
-fit_ns <- function(dist, type = "fixeddisp", data, varnm, covnm_1, covnm_2 = NA, lower = F, ...) {
+fit_ns <- function(dist, type = "fixeddisp", data, varnm, covnm_1, covnm_2 = NA, lower = F, event_index = NA, ...) {
     
     # currently only works for distributions fully specified by mean & sd: only tested for normal, lognormal
     if(! dist %in% c("norm", "lnorm")) {
@@ -64,16 +64,17 @@ fit_ns <- function(dist, type = "fixeddisp", data, varnm, covnm_1, covnm_2 = NA,
     }
     
     x <- data[,varnm]
+    if(is.na(event_index)) { event_index <- length(x) } # assume that year of interest is most recent, unless told otherwise
     
     # fit model with appropriate number of parameters, pad if necessary
     if(is.na(covnm_2)) {
         init <- c("mu0" = mean(x), "sigma0" = sd(x), "alpha" = 0)
-        fitted <- suppressWarnings(optim(par = init, ns_mle, cov1 = df[,covnm_1], x = x, dist = dist, fittype = type, ...))
+        fitted <- suppressWarnings(optim(par = init, ns_mle, cov1 = data[,covnm_1], x = x, dist = dist, fittype = type, ...))
         fitted[["par"]]["beta"] <- 0
         mdl_call <- paste0(varnm," ~ ",covnm_1)
     } else {
         init <- c("mu0" = mean(x), "sigma0" = sd(x), "alpha" = 0, "beta" = 0)
-        fitted <- suppressWarnings(optim(par = init, ns_mle_2cov, cov1 = df[,covnm_1], cov2 = df[,covnm_2], x = x, dist = dist, fittype = type, ...))
+        fitted <- suppressWarnings(optim(par = init, ns_mle_2cov, cov1 = data[,covnm_1], cov2 = data[,covnm_2], x = x, dist = dist, fittype = type, ...))
         mdl_call <- paste0(varnm," ~ ",covnm_1, " + ", covnm_2)
     }
         
@@ -85,12 +86,13 @@ fit_ns <- function(dist, type = "fixeddisp", data, varnm, covnm_1, covnm_2 = NA,
     fitted[["varnm"]] <- varnm
     fitted[["covnm_1"]] <- covnm_1
     fitted[["covnm_2"]] <- covnm_2
+    fitted[["ev_idx"]] <- event_index
     fitted[["x"]] <- x
-    fitted[["cov1"]] <- df[,covnm_1]
+    fitted[["cov1"]] <- data[,covnm_1]
     if(is.na(covnm_2)) {
         fitted[["cov2"]] <- 0
     } else {
-        fitted[["cov2"]] <- df[,covnm_2]
+        fitted[["cov2"]] <- data[,covnm_2]
     }
 
     return(fitted)
@@ -103,6 +105,7 @@ ns_pars <- function(mdl, cov1 = NA, cov2 = 0) {
     
     pars <- mdl$par
     if(is.na(cov1[1])) cov1 <- mdl$cov1
+    if(is.na(cov2[1])) cov2 <- mdl$cov2
     
     if(mdl$type == "fixeddisp") {
         
@@ -170,8 +173,7 @@ copula_mesh <- function(mdl_x, mdl_y, copula, cov1, cov2 = 0, xrange, yrange, n 
 # Get return periods, return levels etc from a single fitted model                                  
 model_res <- function(mdl_x, x, cov1_hist, cov2_hist = 0, dI_rel = F) {
     
-    u_x <- map_to_u(mdl_x, x)[mdl_x$x == x]
-        
+    u_x <- map_to_u(mdl_x)[mdl_x$x == x]
     uhist_x <- map_to_u(mdl_x, x, cov1 = cov1_hist, cov2 = cov2_hist)
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -195,6 +197,7 @@ model_res <- function(mdl_x, x, cov1_hist, cov2_hist = 0, dI_rel = F) {
     
     res <- data.frame("dist" = c(mdl_x$dist),
                       "fit_type" = c(mdl_x$type),
+                      # "converged" = c(mdl_x$convergence),
                       "mu0" = c(mdl_x$par["mu0"]),
                       "sigma0" = c(mdl_x$par["sigma0"]),
                       "alpha" = c(mdl_x$par["alpha"]),
@@ -233,6 +236,7 @@ jmodel_res <- function(mdl_x, mdl_y, copula, x, y, cov1_hist, cov2_hist = 0, dI_
     
     res_joint <- data.frame("dist" = c(class(cfit)),
                             "fit_type" = c("stationary"),
+                            # "convergence" = c(NA),
                             "mu0" = c(NA),
                             "sigma0" = c(NA),
                             "alpha" = c(NA),

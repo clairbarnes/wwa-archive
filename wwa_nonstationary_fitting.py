@@ -20,7 +20,7 @@ import sys; sys.path.append('/home/clair/wwa'); from wwa import xyline
 def ns_mle(x0, covariate, x, dist, fittype):
     
     # Generic fitting method: can add extra distributions & fit types as needed
-        
+            
     if dist in [norm]:
         mu, sigma, alpha = x0[:3]
     elif dist in [gev, genextreme]:
@@ -309,7 +309,7 @@ def boot_results(mdl, cov1, cov2, event_value = np.nan, rp = np.nan, lower = Fal
 #######################################################################################################################################
 ## PLOTTING METHODS
 
-def trendplot(mdl, cov1, cov2, loc1 = None, loc2 = None, lower = False, ax = None, legend = True):
+def trendplot(mdl, cov1, cov2, loc1 = None, loc2 = None, lower = False, ax = None, legend = True, transform = None):
     
     # extract necessary info from model
     covariate = mdl["data"][[mdl["cov_name"]]].values.flatten()
@@ -324,6 +324,11 @@ def trendplot(mdl, cov1, cov2, loc1 = None, loc2 = None, lower = False, ax = Non
     # if log distribution, convert location to native units
     if mdl["dist"] in ["lognorm"]: loc, loc1, loc2 = [np.exp(l) for l in [loc, loc1, loc2]]
     
+    rl6, rl40 = [return_level(mdl, ny, lower = lower) for ny in [6,40]]
+    
+    if transform:
+        x, rl6, rl40, event_value, loc, loc1, loc2 = [[transform(v) for v in v_list] for v_list in [x, rl6, rl40, event_value, loc, loc1, loc2]]
+        
     # and now, plotting
     if not ax: fig, ax = plt.subplots(figsize = (5,3))
     
@@ -333,8 +338,8 @@ def trendplot(mdl, cov1, cov2, loc1 = None, loc2 = None, lower = False, ax = Non
     
     # fitted location and return levels
     xyline(covariate, loc, ax, 2, ls = "--", color = "k", label = "$\mu'$")
-    xyline(covariate, return_level(mdl, 6, lower = lower), ax, ls = "--", color = "blue", label = "6-year event")
-    xyline(covariate, return_level(mdl, 40, lower = lower), ax, ls = "--", color = "blue", alpha = 0.5, label = "40-year event")
+    xyline(covariate, rl6, ax, ls = "--", color = "blue", label = "6-year event")
+    xyline(covariate, rl40, ax, ls = "--", color = "blue", alpha = 0.5, label = "40-year event")
     
     # bounds for location
     ax.plot([cov1]*3, loc1, color = "k", marker = "_", ms = 10)
@@ -344,14 +349,19 @@ def trendplot(mdl, cov1, cov2, loc1 = None, loc2 = None, lower = False, ax = Non
     
     
     
-def time_trendplot(mdl, ax = None, event_year = None, lower = False, loc_colour = "k", rl_colour = "blue"):
+def time_trendplot(mdl, ax = None, event_year = None, lower = False, loc_colour = "k", rl_colour = "blue", transform = None):
     
     if not ax: fig, ax = plt.subplots(figsize = (5,3))
     
-    ax.step(mdl["data"].index, mdl["data"][mdl["var_name"]], color = "k", where = "mid")
-    
+    x = mdl["data"][mdl["var_name"]]
     mu = ns_pars(mdl)["loc"]
     if mdl["dist"] in ["lognorm"]: mu = np.exp(mu)
+    
+    rl6, rl40 = [return_level(mdl, ny, lower = lower) for ny in [6,40]]
+    if transform:
+        x, rl6, rl40, event_value, loc, loc1, loc2 = [[transform(v) for v in v_list] for v_list in [x, mu, rl6, rl40]]
+        
+    ax.step(mdl["data"].index, x, color = "k", where = "mid")
     mu.plot(ax = ax, color = loc_colour, ls = "--", label = "_$\mu$")
         
     ax.plot(mdl["data"].index, return_level(mdl, 6, lower = lower), color = rl_colour, ls = "--", label = "6-year return level")
@@ -587,7 +597,6 @@ def ns_qqplot(mdl, cov1, ax = None, dist = norm, marker = ".", xyline = True, ax
     if transform:
         ts_stationary = transform(ts_stationary)
         fitted_x = transform(fitted_x)
-    
     
     if ax is None:
         fig, ax = plt.subplots(figsize = (5,5), dpi = 100, facecolor = "w")

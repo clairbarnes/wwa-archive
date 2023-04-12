@@ -22,7 +22,7 @@ from geopy.geocoders import Nominatim
 
 # needed when converting regionmask into polygon
 from shapely.geometry import Polygon
-from xrspatial.experimental import polygonize
+# from xrspatial.experimental import polygonize
 
 import re
 import glob

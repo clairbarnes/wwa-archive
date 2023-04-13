@@ -147,6 +147,34 @@ map_from_u <- function(u, mdl, cov1, cov2 = 0) {
 }
 
 
+# wrapper for probability ratio
+prob_ratio <- function(mdl, ev, cov1, cov1_cf, cov2 = 0, cov2_cf = 0) {
+    
+    ep_f <- map_to_u(mdl, ev, cov1 = cov1, cov2 = cov2)
+    ep_cf <- map_to_u(mdl, ev, cov1 = cov1_cf, cov2 = cov2_cf)
+    
+    ep_f / ep_cf
+}
+
+
+# wrapper for change in intensity
+Delta_I <- function(mdl, rp, cov1, cov1_cf, cov2 = 0, cov2_cf = 0, relative = T) {
+    
+    rl <- map_from_u(1/rp, mdl, cov1 = cov1, cov2 = cov2)
+    rl_cf <- map_from_u(1/rp, mdl, cov1 = cov1_cf, cov2 = cov2_cf)
+    
+    if(substr(mdl$varnm, 1, 5) == "log10") {
+        rl <- 10^rl
+        rl_cf <- 10^rl_cf
+    }
+    
+    if(relative) {
+        (rl - rl_cf) / rl_cf * 100
+    } else {
+        rl - rl_cf
+    }
+}
+
 ###################################################################################################################
 
 # compute joint exceedances over regular grid for easy plotting

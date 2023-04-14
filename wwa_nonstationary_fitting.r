@@ -285,29 +285,88 @@ jmodel_res <- function(mdl_x, mdl_y, copula, x, y, cov1_hist, cov2_hist = 0, dI_
 ###################################################################################################################
                                                                                      
 # Return period plots                                                                                  
-plot_returnperiods <- function(mdl, cov1, cov2, event_value, lower = F, ylim = NA, pch = 20, ylab = "value", legend_pos = "topright", main = "", ...) {
+plot_returnperiods <- function(mdl, cov1, cov1_cf, cov2 = 0, cov2_cf = 0, event_value = NA, ylim = NA, pch = 20, ylab = NA, legend_pos = "topright", main = "", ...) {
     
+    x <- mdl$x
     rp_x <- unique(c(seq(1.1,2,0.1), seq(2,100,1), seq(100,1000,10), seq(100,1000,100), seq(1000,10000,1000))) # return periods at which to calculate values
-    rp_th <- 1/seq(1,0,length.out = length(mdl$x)+2)[2:(length(mdl$x)+1)]                                      # theoretical return periods
+    rp_th <- 1/seq(1,0,length.out = length(x)+2)[2:(length(x)+1)]                                      # theoretical return periods
+    if(is.na(event_value)) { event_value <- x[mdl$ev_idx] }
     
-    if(is.na(ylim[1])) { ylim <- range(pretty(mdl$x)) }
-    if(min(ylim) <= 0) { ylim <- c(0.01, max(ylim)) }
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    rl_curve_pres <- map_from_u(1/rp_x, mdl, cov1 = cov1, cov2 = cov2)
+    rl_curve_cf <- map_from_u(1/rp_x, mdl, cov1 = cov1_cf, cov2 = cov2_cf)
+    
+    rl_obs_pres <- map_from_u(map_to_u(mdl), mdl, cov1 = cov1, cov2 = cov2)
+    rl_obs_cf <- map_from_u(map_to_u(mdl), mdl, cov1 = cov1_cf, cov2 = cov2_cf)
+    
+    rp_event_pres <- 1/map_to_u(mdl, event_value, cov1 = cov1, cov2 = cov2)
+    rp_event_cf <- 1/map_to_u(mdl, event_value, cov1 = cov1_cf, cov2 = cov2_cf)
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
     # prep axes
-    plot(0,type = "n", xlim = c(1,10000), ylim = ylim, log = "x", xlab = "Return period (years)", ylab = ylab, main = main, ...)
+    if(is.na(ylim[1])) { ylim <- range(pretty(x)) }
+    if(is.na(ylab)) {ylab <- mdl$varnm}
+    if((substr(mdl$varnm,1,3) == "log") & (ylim[1] <= 0)) { ylim[1] <- 0.01 }
+    
+    plot(0,type = "n", xlim = c(1,10000), ylim = ylim, log = "x", xlab = "", ylab = "", main = main, ...)
+    
+    mtext("Return period (years)", side = 1, line = 2.5, cex = par("cex"))
+    mtext(ylab, side = 2, line = 2.5, cex = par("cex"))
     
     # return period curves
-    lines(rp_x, map_from_u(1/rp_x, mdl, cov1 = cov1), lwd = 2, col = "firebrick")
-    lines(rp_x, map_from_u(1/rp_x, mdl, cov1 = cov2), lwd = 2, col = "blue")
+    lines(rp_x, rl_curve_pres, lwd = 2, col = "firebrick")          # present
+    lines(rp_x, rl_curve_cf, lwd = 2, col = "blue")         # counterfactual
     
     # expected return periods vs return levels transformed to stationarity at that covariate value
-    points(rp_th, sort(map_from_u(map_to_u(mdl), mdl, cov1 = cov1), decreasing = mdl$lower), col = "firebrick", pch = 20)
-    points(rp_th, sort(map_from_u(map_to_u(mdl), mdl, cov1 = cov2), decreasing = mdl$lower), col = "blue", pch = 20)
+    points(rp_th, sort(rl_obs_pres, decreasing = mdl$lower), col = "firebrick", pch = 20)     # present
+    points(rp_th, sort(rl_obs_cf, decreasing = mdl$lower), col = "blue", pch = 20)          # counterfactual
     
     # horizontal line showing observed event
     abline(h = event_value, col = "magenta", lty = 2)
-    suppressWarnings(rug(1/map_to_u(mdl, event_value, cov1 = cov1), lwd = 3, col = "firebrick"))
-    suppressWarnings(rug(1/map_to_u(mdl, event_value, cov1 = cov2), lwd = 3, col = "blue"))
-        
+    suppressWarnings(rug(rp_event_pres, lwd = 3, col = "firebrick"))   # present
+    suppressWarnings(rug(rp_event_cf, lwd = 3, col = "blue"))          # counterfactual
+            
     legend(legend_pos, legend = c("2022 GMST", "2022 GMST -1.2", "Observed event"), col = c("firebrick", "blue", "magenta"), lty = 1, pch = c(20,20,NA), bty = "n")
-}                                                                                     
+}                                                                            
+
+         
+# Plots of trend in GMST
+plot_gmsttrend <- function(mdl, cov1, cov1_cf, cov2 = 0, ylim = NA, ylab = NA, legend_pos = "topleft", main = "", seed = 1, nsamp = 1000, ...) {
+    
+    if(is.na(ylab)) { ylab <- mdl$varnm}
+    if(is.na(ylim[1])) { ylim <- range(pretty(mdl$x)) }
+    
+    # assumes that first covariate is GMST
+    plot(mdl$cov1, mdl$x, pch = 20, xlab = "", ylab = "", ylim = ylim, xlim = range(c(mdl$cov1, cov1, cov1_cf)))
+    mtext("GMST anomaly", side = 1, line = 2.5, cex = par("cex"))
+    mtext(ylab, side = 2, line = 2.5, cex = par("cex"))
+    
+    points(mdl$cov1[mdl$ev_idx], mdl$x[mdl$ev_idx], col = "magenta", lwd = 2, pch = 0)
+    
+    # trend lines
+    lines(mdl$cov1, ns_pars(mdl, cov2 = cov2)$loc, lwd = 3, col = "black")
+    lines(mdl$cov1, map_from_u(1/6, mdl, cov1 = mdl$cov1, cov2 = cov2), col = "blue", lwd = 2)
+    lines(mdl$cov1, map_from_u(1/40, mdl, cov1 = mdl$cov1, cov2 = cov2), col = "blue", lwd = 1)
+    
+    # get confidence interval for mu'
+    mdl_df <- setNames(data.frame(mdl$x, mdl$cov1, mdl$cov2), c(mdl$varnm, mdl$covnm_1, mdl$covnm_2))
+    set.seed(seed)
+    mu_ci <- apply(sapply(1:nsamp, function(i) {
+        boot_df <- mdl_df[sample(1:nrow(mdl_df), nrow(mdl_df), replace = T),]
+        boot_mdl <- fit_ns(mdl$dist, mdl$type, boot_df, varnm = mdl$varnm, covnm_1 = mdl$covnm_1, covnm_2 = mdl$covnm_2, lower = mdl$lower)
+        c("mu_ev" = ns_pars(boot_mdl, cov1 = cov1, cov2 = cov2)$loc,
+          "mu_cf" = ns_pars(boot_mdl, cov1 = cov1_cf, cov2 = cov2)$loc)
+    }), 1, quantile, c(0.025, 0.975))
+    
+    # confidence interval & markers for mu' at present & counterfactual covariates
+    lines(rep(cov1, 2), mu_ci[,"mu_ev.mu0"], col = "black", lwd = 2, pch = "_")
+    lines(rep(cov1_cf, 2), mu_ci[,"mu_cf.mu0"], col = "black", lwd = 2)
+    
+    points(rep(cov1, 3), c(mu_ci[,"mu_ev.mu0"], ns_pars(mdl, cov1 = cov1, cov2 = cov2)$loc), col = "black", lwd = 3, pch = "_")
+    points(rep(cov1_cf, 3), c(mu_ci[,"mu_cf.mu0"], ns_pars(mdl, cov1 = cov1_cf, cov2 = cov2)$loc), col = "black", lwd = 3, pch = "_")
+    
+    # add legend
+    legend(legend_pos, legend = c("location", "1-in-6-year event", "1-in-40-year event"), lty = 1, col = c("black", "blue", "blue"), lwd = c(2,2,1))
+}

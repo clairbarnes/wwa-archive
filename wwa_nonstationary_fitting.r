@@ -2,6 +2,12 @@ library("copula")
 library("plyr")
 
 ###################################################################################################################
+# Couple of quick support functions for repetetive tasks
+
+prep_window <- function(rc = c(1,1), w = 4, h = 4) { options(repr.plot.width = rc[2]*w, repr.plot.height = rc[1]*h, repr.plot.res = 200); par(mfrow = rc, pch = 20) }
+load_ts <- function(fnm, col.names) { read.csv(fnm, comment.char = "#", sep = " ", header = F, col.names = col.names) }
+
+###################################################################################################################
 # nonstationary log-likelihood function with two parameters
 
 ns_mle_2cov <- function(pars = c(mu0, sigma0, alpha, beta), cov1, cov2, x, dist, fittype) {
@@ -286,7 +292,7 @@ jmodel_res <- function(mdl_x, mdl_y, copula, x, y, cov1_hist, cov2_hist = 0, dI_
                                                                                      
 # Return period plots                                                                                  
 plot_returnperiods <- function(mdl, cov1, cov1_cf, cov2 = 0, cov2_cf = 0, event_value = NA, ylim = NA, pch = 20, ylab = NA, legend_pos = "topright", main = "", xlim = c(1,10000),
-                               add = F, col_f = "firebrick", col_cf = "blue", lty = 1, ...) {
+                               add = F, col_f = "firebrick", col_cf = "blue", lty = 1, seed = 1, nsamp = 1000, ...) {
     
     x <- mdl$x
     rp_x <- unique(c(seq(1.1,2,0.1), seq(2,100,1), seq(100,1000,10), seq(100,1000,100), seq(1000,10000,1000))) # return periods at which to calculate values
@@ -322,6 +328,25 @@ plot_returnperiods <- function(mdl, cov1, cov1_cf, cov2 = 0, cov2_cf = 0, event_
     lines(rp_x, rl_curve_pres, lwd = 2, col = col_f, lty = lty)          # present
     lines(rp_x, rl_curve_cf, lwd = 2, col = col_cf, lty = lty)         # counterfactual
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # Add confidence intervals to return periods
+    
+    x_ci <- c(5,10,20,50,100,200,500,1000,2000,5000,10000)
+    set.seed(seed)
+    
+    mdl_df <- setNames(data.frame(mdl$x, mdl$cov1, mdl$cov2), c(mdl$varnm, mdl$covnm_1, mdl$covnm_2)) 
+    boot_res <- sapply(1:nsamp, function(i) {
+        boot_df <- mdl_df[sample(1:nrow(mdl_df), nrow(mdl_df), replace = T),]
+        boot_mdl <- fit_ns(mdl$dist, mdl$type, boot_df, varnm = mdl$varnm, covnm_1 = mdl$covnm_1, covnm_2 = mdl$covnm_2, lower = mdl$lower)
+        c(map_from_u(1/x_ci, boot_mdl, cov1 = cov1, cov2 = cov2), map_from_u(1/x_ci, boot_mdl, cov1 = cov1_cf, cov2 = cov2_cf))
+    })
+    boot_ci <- apply(boot_res, 1, quantile, c(0.025, 0.975), na.rm = T)
+    
+    matplot(x_ci, t(boot_ci[,1:length(x_ci)]), type = "l", lty = 1, col = adjustcolor(col_f, alpha = 0.5), add = T)
+    matplot(x_ci, t(boot_ci[,-(1:length(x_ci))]), type = "l", lty = 1, col = adjustcolor(col_cf, alpha = 0.5), add = T)
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
     # expected return periods vs return levels transformed to stationarity at that covariate value
     points(rp_th, sort(rl_obs_pres, decreasing = mdl$lower), col = col_f, pch = pch)     # present
     points(rp_th, sort(rl_obs_cf, decreasing = mdl$lower), col = col_cf, pch = pch)          # counterfactual
@@ -332,7 +357,7 @@ plot_returnperiods <- function(mdl, cov1, cov1_cf, cov2 = 0, cov2_cf = 0, event_
     suppressWarnings(rug(rp_event_cf, lwd = 3, col = col_cf))          # counterfactual
             
     legend(legend_pos, legend = c("2022 GMST", "2022 GMST -1.2", "Observed event"), col = c(col_f, col_cf, "magenta"), lty = lty, pch = c(pch,pch,NA), bty = "n")
-}                                                                            
+}                                                                              
 
          
 # Plots of trend in GMST

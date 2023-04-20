@@ -169,9 +169,13 @@ Delta_I <- function(mdl, rp, cov1, cov1_cf, cov2 = 0, cov2_cf = 0, relative = T)
     rl <- map_from_u(1/rp, mdl, cov1 = cov1, cov2 = cov2)
     rl_cf <- map_from_u(1/rp, mdl, cov1 = cov1_cf, cov2 = cov2_cf)
     
+    # if variable is logged, convert to real values first
     if(substr(mdl$varnm, 1, 5) == "log10") {
         rl <- 10^rl
         rl_cf <- 10^rl_cf
+    } else if (substr(mdl$varnm, 1, 3) == "log"){
+        rl <- exp(rl)
+        rl_cf <- exp(rl_cf)
     }
     
     if(relative) {
@@ -198,6 +202,9 @@ copula_mesh <- function(mdl_x, mdl_y, copula, cov1, cov2 = 0, xrange, yrange, n 
     # convert the regular mesh to U space
     x_umesh <- map_to_u(mdl_x, x_mesh, cov1 = cov1, cov2 = cov2)
     y_umesh <- map_to_u(mdl_y, y_mesh, cov1 = cov1, cov2 = cov2)
+    
+    if(substr(mdl_x$varnm,1,5) == "log10") { x_mesh <- 10^x_mesh }
+    if(substr(mdl_y$varnm,1,5) == "log10") { y_mesh <- 10^y_mesh }
     
     return(list("x" = x_mesh, "y" = y_mesh, "z" = sapply(y_umesh, function(y) sapply(x_umesh, function(x) pCopula(cbind(x,y), copula)))))
 }
@@ -331,20 +338,22 @@ plot_returnperiods <- function(mdl, cov1, cov1_cf, cov2 = 0, cov2_cf = 0, event_
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Add confidence intervals to return periods
     
-    x_ci <- c(5,10,20,50,100,200,500,1000,2000,5000,10000)
-    set.seed(seed)
-    
-    mdl_df <- setNames(data.frame(mdl$x, mdl$cov1, mdl$cov2), c(mdl$varnm, mdl$covnm_1, mdl$covnm_2)) 
-    boot_res <- sapply(1:nsamp, function(i) {
-        boot_df <- mdl_df[sample(1:nrow(mdl_df), nrow(mdl_df), replace = T),]
-        boot_mdl <- fit_ns(mdl$dist, mdl$type, boot_df, varnm = mdl$varnm, covnm_1 = mdl$covnm_1, covnm_2 = mdl$covnm_2, lower = mdl$lower)
-        c(map_from_u(1/x_ci, boot_mdl, cov1 = cov1, cov2 = cov2), map_from_u(1/x_ci, boot_mdl, cov1 = cov1_cf, cov2 = cov2_cf))
-    })
-    boot_ci <- apply(boot_res, 1, quantile, c(0.025, 0.975), na.rm = T)
-    
-    matplot(x_ci, t(boot_ci[,1:length(x_ci)]), type = "l", lty = 1, col = adjustcolor(col_f, alpha = 0.5), add = T)
-    matplot(x_ci, t(boot_ci[,-(1:length(x_ci))]), type = "l", lty = 1, col = adjustcolor(col_cf, alpha = 0.5), add = T)
-    
+    if(!is.na(nsamp)) {
+        x_ci <- c(5,10,20,50,100,200,500,1000,2000,5000,10000)
+        set.seed(seed)
+        
+        mdl_df <- setNames(data.frame(mdl$x, mdl$cov1, mdl$cov2), c(mdl$varnm, mdl$covnm_1, mdl$covnm_2)) 
+        boot_res <- sapply(1:nsamp, function(i) {
+            boot_df <- mdl_df[sample(1:nrow(mdl_df), nrow(mdl_df), replace = T),]
+            boot_mdl <- fit_ns(mdl$dist, mdl$type, boot_df, varnm = mdl$varnm, covnm_1 = mdl$covnm_1, covnm_2 = mdl$covnm_2, lower = mdl$lower)
+            c(map_from_u(1/x_ci, boot_mdl, cov1 = cov1, cov2 = cov2), map_from_u(1/x_ci, boot_mdl, cov1 = cov1_cf, cov2 = cov2_cf))
+        })
+        boot_ci <- apply(boot_res, 1, quantile, c(0.025, 0.975), na.rm = T)
+        
+        matplot(x_ci, t(boot_ci[,1:length(x_ci)]), type = "l", lty = 1, col = adjustcolor(col_f, alpha = 0.5), add = T)
+        matplot(x_ci, t(boot_ci[,-(1:length(x_ci))]), type = "l", lty = 1, col = adjustcolor(col_cf, alpha = 0.5), add = T)
+    }
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
     # expected return periods vs return levels transformed to stationarity at that covariate value

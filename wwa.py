@@ -42,6 +42,9 @@ warnings.filterwarnings("ignore", message = ".+Results from 'centroid' are likel
 
 from  IPython.display import clear_output
 
+####################################################################################################################
+
+def load_ts(fnm, names, **kwargs): return(pd.read_csv(fnm, comment = "#", sep = " ", header = None, names = names, **kwargs))
 
 ####################################################################################################################
 ## GOODNESS OF FIT

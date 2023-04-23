@@ -195,7 +195,7 @@ def xyline(x, y, ax = None, npoly = 1, **plot_kwargs):
 ###############################################################################################################
 ## DROUGHT PLOTTING FUNCTIONS
 
-def drought_map(di, ax = None):
+def drought_map(di, ax = None, **kwargs):
     
     dc = xr.apply_ufunc(np.digitize, di, kwargs={'bins': [-np.inf, -2, -1.55, -1.25, -.75, -.5]})
     
@@ -204,17 +204,19 @@ def drought_map(di, ax = None):
     
     drought_cmap = matplotlib.colors.ListedColormap(['darkred', 'red', 'orange', 'gold','yellow']); drought_cmap.set_over('honeydew')
 
-    cbar = dc.plot(ax = ax, cmap = drought_cmap, norm = matplotlib.colors.BoundaryNorm(np.arange(0.5,6.5,1), drought_cmap.N), add_colorbar = False)
-    return cbar    
+    cbar = dc.plot(ax = ax, cmap = drought_cmap, norm = matplotlib.colors.BoundaryNorm(np.arange(0.5,6.5,1), drought_cmap.N), add_colorbar = False, **kwargs)
+    return cbar  
 
 
-def drought_colorbar(cbar, ax, location = "bottom", label = "Drought classification", **cbar_kwargs): 
+def drought_colorbar(cbar, ax, location = "bottom", label = "Drought classification", increasing = True, **cbar_kwargs): 
     
     cbar = plt.colorbar(cbar, ax = ax, location = location, ticks = list(range(1,6)), extend = "max", label = label, **cbar_kwargs)
     if location == "bottom":
         cbar.ax.set_xticklabels(["D" + str(x) for x in range(4,-1,-1)])
+        if increasing: cbar.ax.invert_xaxis()
     else:
         cbar.ax.set_yticklabels(["D" + str(x) for x in range(4,-1,-1)])
+        if increasing: cbar.ax.invert_yaxis()
 
 ###############################################################################################################
 ## MISC

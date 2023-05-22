@@ -14,3 +14,10 @@ ipython kernel install --user --name=wps
 # could probably do with modifying this to use xclim, xesmf, regionmask, geopandas etc - but this may require removing the environment & reconstructing from scratch (think xesmf may need to be installed before other packages?)
 
 # had to reinstall netcdf4 in order to actually open data for some reason
+
+
+
+
+
+# fresh environment installed 19/5/23:
+conda create -n wps esgf-pyclient defusedxml MyProxyClient xarray matplotlib netcdf4 ipykernel -y

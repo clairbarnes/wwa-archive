@@ -395,18 +395,27 @@ rcm = {'CCCma-CanRCM4' : "CanRCM4",
        'CLMcom-ETH-COSMO-crCLIM-v1-1' : 'crCLIM-v1-1',
        'CLMcom-HZG-CCLM5-0-15' : "CCLM5-0-15",
        'CLMcom-KIT-CCLM5-0-15' : "CCLM5-0-15",
+       'CNRM-ALADIN53' : "ALADIN53",
+       'CNRM-ALADIN63' : "ALADIN63",
        'DMI-HIRHAM5' : "HIRHAM5",
        'GERICS-REMO2009' : "REMO2009",
        'GERICS-REMO2015' : "REMO2015",
        'ICTP-RegCM4-3' : "RegCM4-3",
+       'ICTP-RegCM4-6' : "RegCM4-6",
        'ICTP-RegCM4-7' : "RegCM4-7",
        'IITM-RegCM4-4' : "RegCM4-4",
+       'IPSL-WRF381P' : "WRF381P",
+       'KNMI-RACMO22E' : "RACMO22E",
        'KNMI-RACMO22T' : "RACMO22T",
+       'MOHC-HadREM3-GA7-05' : "HadREM3-GA7-05",
        'MPI-CSC-REMO2009' : "REMO2009",
+       'RMIB-UGent-ALARO-0' : 'ALARO-0',
        'SMHI-RCA4' : "RCA4",
        'UCAN-WRF341I' : "WRF341I",
+       'UHOH-WRF361H' : "WRF361H",
        'UNSW-WRF360J' : "WRF360J",
        'UNSW-WRF360K' : "WRF360K"}
+
 
 # method to decode filename into model name
 def cordex_model(fnm): return gcm[fnm.split("_")[2]]+"_"+fnm.split("_")[4][:-4]+"_"+rcm[fnm.split("_")[5]]

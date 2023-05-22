@@ -1,4 +1,4 @@
-# scripturl01 :: http://climexp.knmi.nl/getindices.cgi?STATION=smoothed_GMST&TYPE=i&WMO=NASAData/giss_al_gl_a_4yrlo&id=someone@somewhere
+# scripturl01 :: http://climexp.knmi.nl/getindices.cgi?STATION=smoothed_GMST&TYPE=i&WMO=NASAData/giss_al_gl_a_4yrlo&id=62f4b5a82fde776a4c64f0ca33646aa0
 # requiring at least 0.25 fraction valid points
 # Ta [Celsius] annual mean of GISTEMP global Ts+dSST temperature anomaly
 # file :: giss_al_gl_m_4yrlo.dat

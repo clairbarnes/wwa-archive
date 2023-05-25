@@ -160,6 +160,11 @@ return_level <- function(mdl, rp, covariate, lower = F) {
     } else if(grepl("norm", mdl$type)) {
         pars <- sgev_pars(mdl, covariate = covariate)
         rl <- qnorm(1/rp, mean = pars$loc, sd = pars$scale, lower.tail = lower)
+    } else if(grepl("fixeddisp", mdl$type)) {
+        rl <- sapply(covariate, function(st) {
+            pars <- sgev_pars(ns_mdl, covariate = st)
+            unname(rlevd(rp, loc = pars$loc, scale = pars$scale, shape = pars$shape))
+        })
     } else { 
         if(lower) { print("Check rlevd behaviour for lower tails") }
         pars <- sgev_pars(mdl, covariate = covariate)
@@ -351,9 +356,13 @@ stransf <- function(mdl, covariate = NA, lower = F) {
         
     } else if(mdl$type == 'GEV_fixeddisp') {
         
-        # transform to standard Gumbel
-        pars <- fd_lss(mdl)
-        return(log(1 + (mdl$x - pars$loc) * pars$shape / pars$scale) / pars$shape)
+        # use inverse probability transform
+        pit <- sort(sapply(1:length(mdl$x), function(i) {
+            pars <- sgev_pars(mdl, mdl$cov.data[i,mdl$cov.name])
+            pevd(mdl$x[i], loc = pars$loc, scale = pars$scale, shape = pars$shape)
+        }), decreasing = T)
+        svalue <- qevd(pit, loc = s_pars$loc, scale = s_pars$scale, shape = s_pars$shape, lower.tail = lower)
+        return(svalue)
         
     } else {
         return(trans(mdl))

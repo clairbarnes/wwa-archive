@@ -162,7 +162,7 @@ return_level <- function(mdl, rp, covariate, lower = F) {
         rl <- qnorm(1/rp, mean = pars$loc, sd = pars$scale, lower.tail = lower)
     } else if(grepl("fixeddisp", mdl$type)) {
         rl <- sapply(covariate, function(st) {
-            pars <- sgev_pars(ns_mdl, covariate = st)
+            pars <- sgev_pars(mdl, covariate = st)
             unname(rlevd(rp, loc = pars$loc, scale = pars$scale, shape = pars$shape))
         })
     } else { 

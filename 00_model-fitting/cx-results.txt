@@ -1,0 +1,6 @@
+variable dist fittype mu0 sigma0 shape alpha
+tmax gev shift 32.119 0.962 -0.108 3.100
+tmax gev fixeddisp 32.135 0.914 -0.089 3.102
+log10_pr norm shift 2.135 0.175 NA 0.141
+log10_pr norm fixeddisp 2.134 0.169 0.146
+tmin gev shift -0.185 -1.473 -0.107 2.383

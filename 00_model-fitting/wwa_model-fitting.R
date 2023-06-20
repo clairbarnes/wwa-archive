@@ -524,8 +524,8 @@ cmodel_results <- function(mdl, rp = 10, cov_pres, cov_pi = NA, cov_fut = NA, ns
     if(di_relative) { di_cnm <- "dI_rel" } else { di_cnm <- "dI_abs" }
     if(mdl$type == "fixeddisp") { key_par <- "disp" } else { key_par <- "sigma0" }
     if(mdl$dist == "gev") { key_par <- c(key_par, "shape") }
-
-    ci_eval <- boot_ci(mdl_eval, cov = cov_pres, cov_cf = cov_pi, ev = event_rl, rp = rp, nsamp = nsamp)[c(key_par),]
+    
+    ci_eval <- boot_ci(mdl_eval, cov = cov_pres, cov_cf = cov_pi, ev = event_rl, rp = rp, nsamp = nsamp)[c(key_par),,drop = F]
     ci_attr <- boot_ci(mdl_attr, cov = cov_pres, cov_cf = cov_pi, ev = event_rl, rp = rp, nsamp = nsamp)[c("PR", di_cnm),]
     ci_proj <- boot_ci(mdl_proj, cov = cov_pres, cov_cf = cov_fut, ev = event_rl, rp = rp, nsamp = nsamp)[c("PR", di_cnm),]
                    

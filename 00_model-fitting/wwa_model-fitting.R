@@ -1,9 +1,10 @@
 # METHODS USED IN WWA RAPID ATTRIBUTION STUDIES
 
-suppressMessages({
+suppressWarnings(suppressMessages({
     library(extRemes)
     library(abind)
-})
+    library(shape)
+}))
 
 ###################################################################################################################
 # Support functions
@@ -59,7 +60,7 @@ ns_loglik <- function(pars, cov1, x, dist, fittype) {
 #'
 #' @export
 #'   
-fit_ns <- function(dist, type = "fixeddisp", data, varnm, covnm_1, lower = F, mintemps = F, event_index = NA, ...) {
+fit_ns <- function(dist, type = "fixeddisp", data, varnm, covnm_1, lower = F, mintemps = F, ev = NA, ...) {
     
     # currently only works for distributions fully specified by mean & sd: only tested for normal, lognormal
     if(! dist %in% c("norm", "gev")) {
@@ -96,12 +97,24 @@ fit_ns <- function(dist, type = "fixeddisp", data, varnm, covnm_1, lower = F, mi
     fitted[["lower"]] <- lower               # saves having to specify every time later on
     fitted[["mintemps"]] <- mintemps         # look at maxima of 0-temps, rather than minima of observed temps
     
-    if(is.na(event_index)) { event_index <- length(x) } # assume that year of interest is most recent, unless told otherwise (used in later plotting functions)
-    fitted[["ev_idx"]] <- event_index
+    if(is.na(ev)) { ev <- x[length(x)] } # event value: assume that event of interest is most recent, unless told otherwise (used in later plotting functions)
+    fitted[["ev"]] <- ev
 
     return(fitted)
 }
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#' Re-estimate model parameters with new data
+#'
+#' @param mdl Fitted attribution model, as output by ns_fit()
+#' @param new_df New data frame to be used in estimating model parameters. Must contain same column names as original data.
+#' @export
+#'
+refit <- function(mdl, new_df) {
+    fit_ns(dist = mdl$dist, type = mdl$type, data = new_df, varnm = mdl$varnm, covnm_1 = mdl$covnm_1, lower = mdl$lower, mintemps = mdl$mintemps, ev = mdl$ev)
+}
+    
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #' Get parameters of fitted distribution
@@ -140,6 +153,61 @@ ns_pars <- function(mdl, fixed_cov = NA) {
     
 }
 
+
+    
+#' Check sensitivity of parameter estimates to individual years by leave-one-out refitting
+#' @param mdl Fitted attribution model, as output by ns_fit()
+#' @rp Scalar return period to be used to compute relative change in intensity
+#' @ev Scalar event value, to be used to compute return period & probability ratio
+#' @cov Scalar value of covariate in factual world
+#' @cov_cf Scalar value of covariate in counterfactual world
+#'
+#' @export
+#'   
+loo_pars <- function(mdl, check_year, rp = 100, ev, cov, cov_cf, plot = T) {
+    
+    if(missing(ev)) { ev <- mdl$ev }
+    if(missing(check_year)) { check_year <- length(mdl$x) }
+    
+    mdl_res <- c(mdl$par, 
+                 "dI" = int_change(mdl, rp = rp, cov, cov_cf, relative = F),
+                 "dI%" = int_change(mdl, rp = rp, cov, cov_cf, relative = T),
+                 "rp" = return_period(mdl, ev, cov),
+                 "pr" = prob_ratio(mdl, ev = ev, cov, cov_cf))
+    
+    mdl_df <- mdl$data
+    
+    loo_res <- sapply(1:nrow(mdl_df), function(i) {
+        fit_i <- refit(mdl, mdl_df[-i,])
+        
+        c(fit_i$par, 
+          "dI" = int_change(fit_i, rp = rp, cov, cov_cf, relative = F),
+          "dI%" = int_change(fit_i, rp = rp, cov, cov_cf, relative = T),
+          "rp" = return_period(fit_i, ev, cov),
+          "pr" = prob_ratio(fit_i, ev = ev, cov, cov_cf))
+    })
+    loo_res <- cbind("all_years" = mdl_res, loo_res)
+    
+    if(plot) {
+            
+        prep_window(c(1,nrow(loo_res)), w = 2)
+        if(all(!is.finite(loo_res["pr",]))) { loo_res["pr",] <- 10e6 }
+        
+        invisible(sapply(row.names(loo_res), function(i) {
+            boxplot(loo_res[i,-1], main = i, pch = 20)
+            points(loo_res[i,1], pch = 21, bg = "darkgoldenrod2", cex = 1.4)
+            points(loo_res[i,check_year+1], pch = 21, bg = "magenta", cex = 1.4)   # value if specified event omitted
+            if(i == "pr") {
+                abline(h = 1, lty = 2)
+            } else {
+                abline(h = 0, lty = 2)
+            }
+        }))
+    } else {
+        return(loo_res)
+    }
+}
+    
 
 ###################################################################################################################
 
@@ -189,7 +257,7 @@ return_period <- function(mdl, x, fixed_cov = NA) {
 #'   
 prob_ratio <- function(mdl, ev, cov, cov_cf) {
     
-    if(missing(ev)) ev <- mdl$x[mdl$ev_idx]
+    if(missing(ev)) ev <- mdl$ev
     
     ep_f <- map_to_u(mdl, ev, fixed_cov = cov)
     ep_cf <- map_to_u(mdl, ev, fixed_cov = cov_cf)
@@ -292,11 +360,12 @@ int_change <- function(mdl, rp = NA, cov, cov_cf, relative = F) {
 #'
 #' @export
 #'   
-plot_returnlevels <- function(mdl, cov, cov_cf, ylim = NA, pch = 20, ylab = NA, legend_pos = "topright", main = "", xlim = c(1,10000), legend_labels = c("Present climate", "Counterfactual climate"),
+plot_returnlevels <- function(mdl, cov, cov_cf, ev, ylim = NA, pch = 20, ylab = NA, legend_pos = "topright", main = "", xlim = c(1,10000), legend_labels = c("Present climate", "Counterfactual climate"),
                               seed = 42, nsamp = 500, ...) {
     
     x <- mdl$x
-    event_value <- x[mdl$ev_idx]
+    if(missing(ev)) { ev <- mdl$ev }
+    
     rp_x <- unique(c(seq(1.1,2,0.1), seq(2,100,1), seq(100,1000,10), seq(100,1000,100), seq(1000,10000,1000)))     # return periods at which to calculate values for curves
     rp_th <- 1/seq(1,0,length.out = length(x)+2)[2:(length(x)+1)]                                                  # quantiles to map against observations to check fit
     
@@ -324,8 +393,8 @@ plot_returnlevels <- function(mdl, cov, cov_cf, ylim = NA, pch = 20, ylab = NA, 
     rl_obs_pres <- map_from_u(map_to_u(mdl), mdl, fixed_cov = cov)
     rl_obs_cf <- map_from_u(map_to_u(mdl), mdl, fixed_cov = cov_cf)
     
-    rp_event_pres <- 1/map_to_u(mdl, x[mdl$ev_idx], fixed_cov = cov)
-    rp_event_cf <- 1/map_to_u(mdl, x[mdl$ev_idx], fixed_cov = cov_cf)
+    rp_event_pres <- 1/map_to_u(mdl, ev, fixed_cov = cov)
+    rp_event_cf <- 1/map_to_u(mdl, ev, fixed_cov = cov_cf)
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
@@ -338,7 +407,7 @@ plot_returnlevels <- function(mdl, cov, cov_cf, ylim = NA, pch = 20, ylab = NA, 
     points(rp_th, sort(rl_obs_cf, decreasing = mdl$lower), col = "blue", pch = pch)             # counterfactual
     
     # horizontal line showing observed event, plus ticks showing return periods
-    abline(h = event_value, col = "magenta", lty = 2)
+    abline(h = ev, col = "magenta", lty = 2)
     suppressWarnings(rug(rp_event_pres, lwd = 3, col = "firebrick"))   # present
     suppressWarnings(rug(rp_event_cf, lwd = 3, col = "blue"))          # counterfactual
     
@@ -353,7 +422,7 @@ plot_returnlevels <- function(mdl, cov, cov_cf, ylim = NA, pch = 20, ylab = NA, 
         boot_res <- sapply(1:nsamp, function(i) {
             boot_df <- mdl_df[sample(1:nrow(mdl_df), nrow(mdl_df), replace = T),]
             tryCatch({
-                boot_mdl <- fit_ns(mdl$dist, mdl$type, boot_df, varnm = mdl$varnm, covnm_1 = mdl$covnm_1, lower = mdl$lower, mintemps = mdl$mintemps, event_index = mdl$ev_idx)
+                boot_mdl <- fit_ns(mdl$dist, mdl$type, boot_df, varnm = mdl$varnm, covnm_1 = mdl$covnm_1, lower = mdl$lower, mintemps = mdl$mintemps, ev = ev)
                 c(map_from_u(1/x_ci, boot_mdl, fixed_cov = cov), map_from_u(1/x_ci, boot_mdl, fixed_cov = cov_cf))
             }, error = function(cond) {return(rep(NA, length(x_ci)*2))})
         })
@@ -376,16 +445,17 @@ plot_returnlevels <- function(mdl, cov, cov_cf, ylim = NA, pch = 20, ylab = NA, 
 #'
 #' @export
 #'   
-plot_gmsttrend <- function(mdl, cov, cov_cf, ylim = NA, ylab = NA, legend_pos = "topleft", main = "", seed = 42, nsamp = 1000) {
+plot_gmsttrend <- function(mdl, cov, cov_cf, ev, ylim = NA, ylab = NA, legend_pos = "topleft", main = "", seed = 42, nsamp = 1000) {
 
     if(is.na(ylab)) { ylab <- mdl$varnm}
     if(is.na(ylim[1])) { ylim <- range(pretty(mdl$x)) }
+    if(missing(ev)) ev <- mdl$ev
     
     plot(mdl$cov1, mdl$x, pch = 20, main = main, xlab = "", ylab = "", ylim = ylim, xlim = range(c(mdl$cov1, cov, cov_cf)))
     mtext("GMST anomaly", side = 1, line = 2.5, cex = par("cex"))
     mtext(ylab, side = 2, line = 2.5, cex = par("cex"))
     
-    points(mdl$cov1[mdl$ev_idx], mdl$x[mdl$ev_idx], col = "magenta", lwd = 2, pch = 0)
+    points(cov, ev, col = "magenta", lwd = 2, pch = 0)
     
     # trend lines
     lines(mdl$cov1, ns_pars(mdl)$loc, lwd = 3, col = "black", lty = 1)
@@ -398,7 +468,7 @@ plot_gmsttrend <- function(mdl, cov, cov_cf, ylim = NA, ylab = NA, legend_pos = 
     mu_ci <- apply(sapply(1:nsamp, function(i) {
         boot_df <- mdl_df[sample(1:nrow(mdl_df), nrow(mdl_df), replace = T),]
         tryCatch({
-            boot_mdl <- fit_ns(mdl$dist, mdl$type, boot_df, varnm = mdl$varnm, covnm_1 = mdl$covnm_1, lower = mdl$lower, mintemps = mdl$mintemps, event_index = mdl$ev_idx)
+            boot_mdl <- fit_ns(mdl$dist, mdl$type, boot_df, varnm = mdl$varnm, covnm_1 = mdl$covnm_1, lower = mdl$lower, mintemps = mdl$mintemps, ev = ev)
             c("mu_ev" = ns_pars(boot_mdl, fixed_cov = cov)$loc,
               "mu_cf" = ns_pars(boot_mdl, fixed_cov = cov_cf)$loc)
         }, error = function(cond) {return(rep(NA, 2))})
@@ -419,17 +489,19 @@ plot_gmsttrend <- function(mdl, cov, cov_cf, ylim = NA, ylab = NA, legend_pos = 
 #'
 #' @export
 #'   
-plot_trend <- function(mdl, ylab = NA, legend_pos = "topleft", main = "", ylim = NA, ...) {
+plot_trend <- function(mdl, ev, ev_year, ylab = NA, legend_pos = "topleft", main = "", ylim = NA, ...) {
     
     if(is.na(ylab)) {ylab <- mdl$varnm}
     if(is.na(ylim[1])) { ylim <- range(pretty(mdl$x)) }
+    if(missing(ev)) { ev <- mdl$ev }
+    if(missing(ev_year)) { ev_year <- mdl$data$year[which.min(abs(mdl$x - ev))] }
     
     plot(mdl$data$year, mdl$x, type = "s", lwd = 2, col = adjustcolor("black", alpha = 0.5), xlab = "Year", ylab = ylab, main = main, ylim = ylim, ...)
     
     lines(mdl$data$year, ns_pars(mdl)$loc, col = "black", lwd = 2)
     matplot(mdl$data$year, eff_return_level(c(6,40), mdl), type = "l", lty = 1, add = T, col = "blue", lwd = c(2,1))
     
-    points(mdl$data$year[mdl$ev_idx], mdl$x[mdl$ev_idx], col = "magenta", lwd = 2, pch = 0)
+    points(ev_year, ev, col = "magenta", lwd = 2, pch = 0)
     
     # add legend
     legend(legend_pos, legend = c("location", "1-in-6-year event", "1-in-40-year event"), lty = 1, col = c("black", "blue", "blue"), lwd = c(2,2,1))
@@ -472,7 +544,7 @@ mdl_ests <- function(mdl, cov, cov_cf, ev, rp = NA) {
 boot_ci <- function(mdl, cov, cov_cf, ev = NA, rp = NA, seed = 42, nsamp = 500, dp = 5) {
     
     # get best estimate from the observed data
-    if(is.na(ev)) ev  <- mdl$x[mdl$ev_idx]
+    if(is.na(ev)) ev  <- ev
     mdl_res <- mdl_ests(mdl, cov, cov_cf, ev, rp = rp)
     
     # get bootstrap sample
@@ -480,7 +552,7 @@ boot_ci <- function(mdl, cov, cov_cf, ev = NA, rp = NA, seed = 42, nsamp = 500, 
     boot_res <- sapply(1:nsamp, function(i) {
         boot_df <- mdl$data[sample(1:nrow(mdl$data), replace = T),]
         tryCatch({
-            boot_mdl <- fit_ns(mdl$dist, mdl$type, boot_df, varnm = mdl$varnm, covnm_1 = mdl$covnm_1, lower = mdl$lower, mintemps = mdl$mintemps, event_index = mdl$ev_idx)
+            boot_mdl <- fit_ns(mdl$dist, mdl$type, boot_df, varnm = mdl$varnm, covnm_1 = mdl$covnm_1, lower = mdl$lower, mintemps = mdl$mintemps, ev = ev)
             mdl_ests(boot_mdl, cov, cov_cf, ev, rp = rp)
         },
         error = function(cond) {return(rep(NA, 10))})
@@ -511,9 +583,9 @@ cmodel_results <- function(mdl, rp = 10, cov_pres, cov_pi = NA, cov_fut = NA, ns
     df <- mdl$data
     
     # fit models
-    mdl_eval <- fit_ns(mdl$dist, mdl$type, df[df$year >= 1979 & df$year <= 2023,], varnm = mdl$varnm, covnm_1 = mdl$covnm_1, lower = mdl$lower, mintemps = mdl$mintemps, event_index = mdl$ev_idx)
-    mdl_attr <- fit_ns(mdl$dist, mdl$type, df[df$year <= 2023,], varnm = mdl$varnm, covnm_1 = mdl$covnm_1, lower = mdl$lower, mintemps = mdl$mintemps, event_index = mdl$ev_idx)
-    mdl_proj <- fit_ns(mdl$dist, mdl$type, df[df$year <= 2050,], varnm = mdl$varnm, covnm_1 = mdl$covnm_1, lower = mdl$lower, mintemps = mdl$mintemps, event_index = mdl$ev_idx)
+    mdl_eval <- fit_ns(mdl$dist, mdl$type, df[df$year >= 1979 & df$year <= 2023,], varnm = mdl$varnm, covnm_1 = mdl$covnm_1, lower = mdl$lower, mintemps = mdl$mintemps, ev = mdl$ev)
+    mdl_attr <- fit_ns(mdl$dist, mdl$type, df[df$year <= 2023,], varnm = mdl$varnm, covnm_1 = mdl$covnm_1, lower = mdl$lower, mintemps = mdl$mintemps, ev = mdl$ev)
+    mdl_proj <- fit_ns(mdl$dist, mdl$type, df[df$year <= 2050,], varnm = mdl$varnm, covnm_1 = mdl$covnm_1, lower = mdl$lower, mintemps = mdl$mintemps, ev = mdl$ev)
     
     # get return level to use for analysis
     event_rl <- eff_return_level(rp = rp, mdl_attr, fixed_cov = cov_pres)

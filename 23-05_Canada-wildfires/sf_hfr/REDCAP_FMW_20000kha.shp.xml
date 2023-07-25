@@ -1,0 +1,3 @@
+<?xml version="1.0"?>
+<!--<!DOCTYPE metadata SYSTEM "http://www.esri.com/metadata/esriprof80.dtd">-->
+<metadata xml:lang="fr"><Esri><MetaID>{CB96DBCF-E571-4982-800B-6D59FE0A8493}</MetaID><CreaDate>20120914</CreaDate><CreaTime>00015100</CreaTime><SyncOnce>TRUE</SyncOnce><DataProperties><lineage><Process Name="Dissolve_1" ToolSource="C:\Program Files\ArcGIS\ArcToolbox\Toolboxes\Data Management Tools.tbx\Dissolve" Date="20120914" Time="000151">Dissolve grid60km_18kha C:\yan\postdoc\Gauthier_Burton_HFRzones_climate\reprise_v1\REDCAP\Fire_more_weight\20000kha\REDCAP_FMW_20000kha.shp grid60km_nfdb_1959_1999_Fire_more_weight_20000kha.REDCAP_nfd # MULTI_PART</Process></lineage></DataProperties></Esri></metadata>

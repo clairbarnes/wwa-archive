@@ -164,7 +164,7 @@ ns_pars <- function(mdl, fixed_cov = NA) {
 #'
 #' @export
 #'   
-loo_pars <- function(mdl, check_year, rp = 100, ev, cov, cov_cf, plot = T) {
+loo_pars <- function(mdl, check_year, rp = 100, ev, cov, cov_cf, plot = T, relative = T) {
     
     if(missing(ev)) { ev <- mdl$ev }
     if(missing(check_year)) { check_year <- length(mdl$x) }
@@ -187,6 +187,7 @@ loo_pars <- function(mdl, check_year, rp = 100, ev, cov, cov_cf, plot = T) {
           "pr" = prob_ratio(fit_i, ev = ev, cov, cov_cf))
     })
     loo_res <- cbind("all_years" = mdl_res, loo_res)
+    if(!relative) loo_res <- loo_res[!grepl("%", rownames(loo_res)),]
     
     if(plot) {
             

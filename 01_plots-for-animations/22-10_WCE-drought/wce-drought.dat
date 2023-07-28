@@ -1,0 +1,82 @@
+# swvl1 [] seasonal mean of swvl1
+# file :: /data/volume_2/climexp/data/iERA5-Land_swvl1_regmean_WCE_mean4_anom_1.dat
+# description :: ERA5-Land swvl1 regmean WCE
+# olderfile :: /data/volume_2/climexp/data/iERA5-Land_swvl1_regmean_WCE.dat
+# institution :: KNMI Climate Explorer
+# scripturl01 :: http://climexp.knmi.nl/daily2longer.cgi?EMAIL=62f4b5a82fde776a4c64f0ca33646aa0&NPERYEAR=366&STATION=ERA5-Land_swvl1_regmean_WCE&TYPE=i&WMO=ERA5-Land_swvl1_regmean_WCE&addoption=add_anom&minfac=1&nperyearnew=4&oper=mean&sum=1
+# comment :: 
+# scripturl02 :: http://climexp.knmi.nl/selectdate.cgi?CLIMATE=mean_daily&EMAIL=62f4b5a82fde776a4c64f0ca33646aa0&NPERYEAR=4&STATION=ERA5-Land_swvl1_regmean_WCE&TYPE=i&WMO=ERA5-Land_swvl1_regmean_WCE_mean4_anom_1&month=3
+# history ::  2023-07-26 14:11:11 bin/selectdate data/iERA5-Land_swvl1_regmean_WCE_mean4_anom_1.dat 3 ERA5-Land_swvl1_regmean_WCE_mean4_anom_1_3_\n 2023-07-26 14:11:09 dat2nc ./data/iERA5-Land_swvl1_regmean_WCE_mean4_anom_1.dat i ERA5-Land_swvl1_regmean_WCE ./data/iERA5-Land_swvl1_regmean_WCE_mean4_anom_1.nc\n 2023-07-26 14:11:09 bin/daily2longer data/iERA5-Land_swvl1_regmean_WCE.dat 4 mean add_anom minfac 1 ERA5-Land_swvl1_regmean_WCE_mean4_anom_1\n
+ 1950  0.2652017    
+ 1951  0.2823094    
+ 1952  0.2668796    
+ 1953  0.2864383    
+ 1954  0.2961437    
+ 1955  0.3015306    
+ 1956  0.3167435    
+ 1957  0.2949326    
+ 1958  0.3100119    
+ 1959  0.2570308    
+ 1960  0.3027970    
+ 1961  0.2900167    
+ 1962  0.3027529    
+ 1963  0.2933344    
+ 1964  0.2853749    
+ 1965  0.3314300    
+ 1966  0.3128304    
+ 1967  0.2952929    
+ 1968  0.3041100    
+ 1969  0.3166914    
+ 1970  0.3126975    
+ 1971  0.3044672    
+ 1972  0.3193037    
+ 1973  0.3097612    
+ 1974  0.3342361    
+ 1975  0.2967760    
+ 1976  0.2960743    
+ 1977  0.3373702    
+ 1978  0.3237909    
+ 1979  0.3001066    
+ 1980  0.3500420    
+ 1981  0.3099975    
+ 1982  0.3186970    
+ 1983  0.2978324    
+ 1984  0.3240589    
+ 1985  0.3354668    
+ 1986  0.2999624    
+ 1987  0.3348946    
+ 1988  0.3229504    
+ 1989  0.3048977    
+ 1990  0.3034874    
+ 1991  0.3106463    
+ 1992  0.2723691    
+ 1993  0.3128810    
+ 1994  0.2833114    
+ 1995  0.2872711    
+ 1996  0.2950279    
+ 1997  0.3280309    
+ 1998  0.3151606    
+ 1999  0.2894177    
+ 2000  0.3044225    
+ 2001  0.3082751    
+ 2002  0.2826011    
+ 2003  0.2750795    
+ 2004  0.3106355    
+ 2005  0.3045315    
+ 2006  0.2919385    
+ 2007  0.2927465    
+ 2008  0.2959765    
+ 2009  0.2975723    
+ 2010  0.2879727    
+ 2011  0.2975265    
+ 2012  0.2930355    
+ 2013  0.2808664    
+ 2014  0.2941931    
+ 2015  0.2544913    
+ 2016  0.3016933    
+ 2017  0.2867659    
+ 2018  0.2616434    
+ 2019  0.2711200    
+ 2020  0.2864014    
+ 2021  0.2981344    
+ 2022  0.2618228    

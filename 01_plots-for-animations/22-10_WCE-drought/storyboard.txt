@@ -5,10 +5,10 @@ The hotter the event (further up), the rarer it becomes (further right).
 3
 The 2022 drought is plotted here.  
 4
-The other black dots represent the soil moisture content each summer, going back to 1950.
+The other black dots represent the surface soil moisture content each summer, going back to 1950.
  5
 The 2022 event is a ‘1 in 13-year event,’ meaning it has about an 8% chance of happening each year.
  6
 Statistical modelling is used to estimate the intensity of similar events happening in the 2022 climate (red dots) and in a 1.2°C cooler world, without human-caused climate change (blue dots). 
  7
-Nowadays, events like the 2022 drought are now about 8% drier and about 15 times more likely because of human-caused climate change. 
+After combining the observational data with climate modelling, we find that events like the 2022 drought are now about 8% drier and about 6 times more likely because of human-caused climate change. 

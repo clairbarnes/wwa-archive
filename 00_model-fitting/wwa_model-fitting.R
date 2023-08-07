@@ -375,7 +375,7 @@ plot_returnlevels <- function(mdl, cov, cov_cf, ev, ylim = NA, pch = 20, ylab = 
     # prep axes
     if(is.na(ylim[1])) { ylim <- range(pretty(x)) }
     if(is.na(ylab)) {ylab <- mdl$varnm}
-    if((substr(mdl$varnm,1,3) == "log") & (ylim[1] <= 0)) { ylim[1] <- 0.01 }
+    # if((substr(mdl$varnm,1,3) == "log") & (ylim[1] <= 0)) { ylim[1] <- 0.01 }
     
     plot(0,type = "n", xlim = xlim, ylim = ylim, log = "x", xlab = "", ylab = "", main = main)
     mtext("Return period (years)", side = 1, line = 2.5, cex = par("cex"))
@@ -446,14 +446,14 @@ plot_returnlevels <- function(mdl, cov, cov_cf, ev, ylim = NA, pch = 20, ylab = 
 #'
 #' @export
 #'   
-plot_gmsttrend <- function(mdl, cov, cov_cf, ev, ylim = NA, ylab = NA, legend_pos = "topleft", main = "", seed = 42, nsamp = 1000) {
+plot_gmsttrend <- function(mdl, cov, cov_cf, ev, ylim = NA, ylab = NA, legend_pos = "topleft", main = "", seed = 42, nsamp = 1000, xlab = "GMST anomaly") {
 
     if(is.na(ylab)) { ylab <- mdl$varnm}
     if(is.na(ylim[1])) { ylim <- range(pretty(mdl$x)) }
     if(missing(ev)) ev <- mdl$ev
     
     plot(mdl$cov1, mdl$x, pch = 20, main = main, xlab = "", ylab = "", ylim = ylim, xlim = range(c(mdl$cov1, cov, cov_cf)))
-    mtext("GMST anomaly", side = 1, line = 2.5, cex = par("cex"))
+    mtext(xlab, side = 1, line = 2.5, cex = par("cex"))
     mtext(ylab, side = 2, line = 2.5, cex = par("cex"))
     
     points(cov, ev, col = "magenta", lwd = 2, pch = 0)

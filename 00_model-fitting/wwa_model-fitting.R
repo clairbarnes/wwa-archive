@@ -569,7 +569,7 @@ boot_ci <- function(mdl, cov, cov_cf, ev = NA, rp = NA, seed = 42, nsamp = 500, 
 #'
 #' @export
 #'   
-cmodel_results <- function(mdl, rp = 10, cov_pres, cov_pi = NA, cov_fut = NA, nsamp = 5, seed = 42, di_relative = NA) {
+cmodel_results <- function(mdl, rp = 10, cov_pres, cov_pi = NA, cov_fut = NA, nsamp = 5, seed = 42, di_relative = NA, y_start = 1979, y_now = 2023, y_fut = 2050) {
     
     set.seed(seed)
     
@@ -584,9 +584,9 @@ cmodel_results <- function(mdl, rp = 10, cov_pres, cov_pi = NA, cov_fut = NA, ns
     df <- mdl$data
     
     # fit models
-    mdl_eval <- fit_ns(mdl$dist, mdl$type, df[df$year >= 1979 & df$year <= 2023,], varnm = mdl$varnm, covnm_1 = mdl$covnm_1, lower = mdl$lower, mintemps = mdl$mintemps, ev = mdl$ev)
-    mdl_attr <- fit_ns(mdl$dist, mdl$type, df[df$year <= 2023,], varnm = mdl$varnm, covnm_1 = mdl$covnm_1, lower = mdl$lower, mintemps = mdl$mintemps, ev = mdl$ev)
-    mdl_proj <- fit_ns(mdl$dist, mdl$type, df[df$year <= 2050,], varnm = mdl$varnm, covnm_1 = mdl$covnm_1, lower = mdl$lower, mintemps = mdl$mintemps, ev = mdl$ev)
+    mdl_eval <- fit_ns(mdl$dist, mdl$type, df[df$year >= y_start & df$year <= y_now,], varnm = mdl$varnm, covnm_1 = mdl$covnm_1, lower = mdl$lower, mintemps = mdl$mintemps, ev = mdl$ev)
+    mdl_attr <- fit_ns(mdl$dist, mdl$type, df[df$year <= y_now,], varnm = mdl$varnm, covnm_1 = mdl$covnm_1, lower = mdl$lower, mintemps = mdl$mintemps, ev = mdl$ev)
+    mdl_proj <- fit_ns(mdl$dist, mdl$type, df[df$year <= y_fut,], varnm = mdl$varnm, covnm_1 = mdl$covnm_1, lower = mdl$lower, mintemps = mdl$mintemps, ev = mdl$ev)
     
     # get return level to use for analysis
     event_rl <- eff_return_level(rp = rp, mdl_attr, fixed_cov = cov_pres)

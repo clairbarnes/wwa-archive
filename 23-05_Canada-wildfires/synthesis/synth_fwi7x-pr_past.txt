@@ -1,0 +1,12 @@
+# synthesis update 2021-12-15
+# Probability ratio, past-present, fwi7x, Earth, 20 yr
+# model chi2/dof =     0.7953    
+# model uncertainty is neglected
+ 1900 2023    34.1        4.71       0.100E+04    4.71       0.100E+04  2 "ERA5 "
+ 1900 2023    3.79        1.38        34.7        1.38        34.7      3 "HadGEM3-GC31-MM r1i1p1f3 ssp585 (1) "
+ 1900 2023    2.00        1.48        11.3        1.48        11.3      3 "MIROC6 r1i1p1f1 ssp585 (1) "
+ 1900 2023    1.41       0.321E-01    5.92       0.321E-01    5.92      3 "NorESM1-M REMO2015 rcp85 (1) "
+ 1900 2023    2.70        1.26        7.34        1.26        7.34      3 "EC-Earth ensemble ssp585 (4) "
+ 1900 2023    1.85        1.61        2.18        1.61        2.18      3 "CanESM2-CanRCM4 rcp85 (35) "
+ 1900 2023    1.88        1.65        2.22        1.65        2.22      4 "models "
+ 1900 2023    1.90        1.66        2.24        2.97        43.5      5 "synthesis "

@@ -1,0 +1,14 @@
+# synthesis update 2021-12-15
+# Probability ratio, past-present, cumDSR, Earth, 25 yr
+# model chi2/dof =      8.917    
+# model uncertainty (2&sigma;) factor     47.7    
+ 1900 2023    170.        16.4       0.384E+04    16.4       0.384E+04  2 "ERA5 "
+ 1900 2023    49.5        16.3        175.       0.887       0.289E+04  3 "HadGEM3-GC31-MM r1i1p1f3 ssp585 (1) "
+ 1900 2023    178.        24.5       0.168E+04    2.31       0.155E+05  3 "MIROC6 r1i1p1f1 ssp585 (1) "
+ 1900 2023    1.19       0.377        3.25       0.211E-01    64.5      3 "MPI-ESM1-2-LR r1i1p1f1 ssp585 (1) "
+ 1900 2023   0.521       0.132        1.76       0.861E-02    30.0      3 "HadGEM2-ES REMO2015 rcp85 (1) "
+ 1900 2023    2.38       0.219        26.1       0.253E-01    225.      3 "NorESM1-M REMO2015 rcp85 (1) "
+ 1900 2023    2.87        1.08        9.11       0.534E-01    162.      3 "EC-Earth3P ensemble ssp585 (4) "
+ 1900 2023    3.26        2.62        3.92       0.679E-01    156.      3 "CanESM2-CanRCM4 rcp85 (35) "
+ 1900 2023    5.00       0.101        247.       0.101        247.      4 "models "
+ 1900 2023    53.4        7.03        621.        3.00        354.      5 "synthesis "

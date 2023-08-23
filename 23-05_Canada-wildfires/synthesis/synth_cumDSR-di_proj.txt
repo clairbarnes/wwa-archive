@@ -1,0 +1,11 @@
+# synthesis update 2021-12-15
+# Change in intensity, present-future, cumDSR, Earth, 25 yr
+# model chi2/dof =      17.17    
+# model uncertainty (2&sigma;)     25.9    %
+ 2023 2050    38.9        33.8        44.1        9.99        75.4      3 "HadGEM3-GC31-MM r1i1p1f3 ssp585 (1) "
+ 2023 2050    30.0        20.5        38.2        2.01        65.0      3 "MIROC6 r1i1p1f1 ssp585 (1) "
+ 2023 2050    11.7      -0.300        23.0       -13.6        43.4      3 "MPI-ESM1-2-LR r1i1p1f1 ssp585 (1) "
+ 2023 2050   -3.70       -24.7        12.8       -31.2        27.3      3 "HadGEM2-ES REMO2015 rcp85 (1) "
+ 2023 2050    26.5        7.00        41.8       -4.84        63.6      3 "NorESM1-M REMO2015 rcp85 (1) "
+ 2023 2050    17.5        15.6        19.1       -6.73        48.0      3 "CanESM2-CanRCM4 rcp85 (35) "
+ 2023 2050    21.2       -4.14        52.9       -4.14        52.9      4 "models "

@@ -1,0 +1,9 @@
+# synthesis update 2021-12-15
+# Probability ratio, present-future, fwi7x, Earth, 20 yr
+# model chi2/dof =      1.421    
+# model uncertainty (2&sigma;) factor     1.18    
+ 2023 2050    2.37        1.36        4.92        1.33        5.01      3 "HadGEM3-GC31-MM r1i1p1f3 ssp585 (1) "
+ 2023 2050    1.75        1.28        2.88        1.23        2.95      3 "MIROC6 r1i1p1f1 ssp585 (1) "
+ 2023 2050    1.72        1.11        2.97        1.08        3.04      3 "NorESM1-M REMO2015 rcp85 (1) "
+ 2023 2050    1.48        1.42        1.56        1.25        1.76      3 "CanESM2-CanRCM4 rcp85 (35) "
+ 2023 2050    1.57        1.31        1.88        1.31        1.88      4 "models "

@@ -1,0 +1,14 @@
+# synthesis update 2021-12-15
+# Change in intensity, past-present, cumDSR, Earth, 25 yr
+# model chi2/dof =      6.265    
+# model uncertainty (2&sigma;)     125.    %
+ 1900 2023    165.        64.0        316.        64.0        316.      2 "ERA5 "
+ 1900 2023    164.        90.0        290.        10.3        548.      3 "HadGEM3-GC31-MM r1i1p1f3 ssp585 (1) "
+ 1900 2023    157.        70.5        276.        3.73        528.      3 "MIROC6 r1i1p1f1 ssp585 (1) "
+ 1900 2023    6.00       -25.8        49.4       -56.2        155.      3 "MPI-ESM1-2-LR r1i1p1f1 ssp585 (1) "
+ 1900 2023   -22.5       -50.2        26.8       -69.2        99.8      3 "HadGEM2-ES REMO2015 rcp85 (1) "
+ 1900 2023    29.4       -36.8        152.       -56.1        269.      3 "NorESM1-M REMO2015 rcp85 (1) "
+ 1900 2023    28.8        2.09        65.6       -44.5        200.      3 "EC-Earth3P ensemble ssp585 (4) "
+ 1900 2023    24.5        19.7        29.4       -44.6        180.      3 "CanESM2-CanRCM4 rcp85 (35) "
+ 1900 2023    42.6       -37.2        224.       -37.2        224.      4 "models "
+ 1900 2023    128.        50.6        238.        20.9        210.      5 "synthesis "

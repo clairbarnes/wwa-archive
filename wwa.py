@@ -433,3 +433,8 @@ def reshape_df(fnm, da):
     return fitted
 
 
+
+def merge_byindex(df_list): 
+    
+    # merge a list of dataframes by matching indices
+    return reduce(lambda left, right: pd.merge(left, right, left_index = True, right_index = True, how = 'outer'), df_list)

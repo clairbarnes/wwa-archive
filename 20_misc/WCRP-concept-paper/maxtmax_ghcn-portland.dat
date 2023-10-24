@@ -1,0 +1,108 @@
+# max_TMAX [Celsius] annual maximum of daily maximum temperature
+# file :: /data/volume_2/climexp/data/xgdcnUSW00024229.dat
+# description :: USW00024229
+# institution :: KNMI Climate Explorer and NOAA/NCEI
+# source_url :: https://catalog.data.gov/dataset/global-historical-climatology-network-daily-ghcn-daily-version-3
+# source_doi :: https://doi.org/10.7289/V5D21VHZ
+# contact_email :: ncdc.ghcnd@noaa.gov
+# reference :: Matthew J. Menne, Imke Durre, Russell S. Vose, Byron E. Gleason, and Tamara G. Houston, 2012: An Overview of the Global Historical Climatology Network-Daily Database. J. Atmos. Oceanic Technol., 29, 897-910. doi:10.1175/JTECH-D-11-00103.1.
+# license :: U.S. Government Work. The non-U.S. data cannot be redistributed within or outside of the U.S. for any commercial activities.
+# station_code :: USW00024229
+# station_name :: PORTLAND_INTL_AP,_OR
+# station_country :: United States
+# wmo_code :: 72698
+# latitude ::   45.60 degrees_north
+# longitude :: -122.61 degrees_east
+# elevation ::      7.0 m
+# climexp_url :: https://climexp.knmi.nl/gdcntmax.cgi?WMO=USW00024229
+# scripturl01 :: http://climexp.knmi.nl/gdcntmax.cgi?STATION=PORTLAND_INTL_AP,_OR&WMO=USW00024229&id=62f4b5a82fde776a4c64f0ca33646aa0
+# timestamp :: Sat Sep  9 23:49:27 2023
+# comment :: 
+# scripturl02 :: http://climexp.knmi.nl/daily2longer.cgi?EMAIL=62f4b5a82fde776a4c64f0ca33646aa0&NAME='maximum_temperature'&NPERYEAR=366&STATION=PORTLAND_INTL_AP,_OR&TYPE=xgdcn&WMO=USW00024229&addoption=add_anom&minfac=0&nperyearnew=1&oper=max&sum=1
+# history ::  2023-09-22  9:26:43 bin/daily2longer data/xgdcnUSW00024229.dat 1 max add_anom minfac 0 USW00024229_max1_anom_0\n 2023-09-22  9:26:31 dat2nc ./data/xgdcnUSW00024229.dat x USW00024229 ./data/xgdcnUSW00024229.nc.3988599\n 2023-09-22  9:26:29 ./GDCNData/gdcntmax USW00024229\n
+ 1938   38.30000    
+ 1939   37.80000    
+ 1940   37.20000    
+ 1941   39.40000    
+ 1942   40.60000    
+ 1943   33.90000    
+ 1944   40.00000    
+ 1945   37.80000    
+ 1946   38.90000    
+ 1947   33.30000    
+ 1948   34.40000    
+ 1949   33.90000    
+ 1950   35.00000    
+ 1951   36.10000    
+ 1952   37.20000    
+ 1953   35.00000    
+ 1954   30.00000    
+ 1955   36.70000    
+ 1956   38.90000    
+ 1957   33.30000    
+ 1958   38.90000    
+ 1959   36.70000    
+ 1960   37.80000    
+ 1961   40.00000    
+ 1962   33.90000    
+ 1963   33.90000    
+ 1964   34.40000    
+ 1965   41.70000    
+ 1966   35.00000    
+ 1967   38.90000    
+ 1968   37.20000    
+ 1969   36.10000    
+ 1970   38.90000    
+ 1971   38.30000    
+ 1972   40.00000    
+ 1973   37.20000    
+ 1974   35.60000    
+ 1975   35.00000    
+ 1976   33.30000    
+ 1977   40.60000    
+ 1978   38.30000    
+ 1979   40.00000    
+ 1980   38.30000    
+ 1981   41.70000    
+ 1982   37.80000    
+ 1983   37.80000    
+ 1984   37.80000    
+ 1985   38.30000    
+ 1986   37.80000    
+ 1987   38.90000    
+ 1988   40.60000    
+ 1989   33.90000    
+ 1990   38.30000    
+ 1991   37.80000    
+ 1992   38.30000    
+ 1993   36.10000    
+ 1994   39.40000    
+ 1995   37.20000    
+ 1996   37.80000    
+ 1997   34.40000    
+ 1998   38.30000    
+ 1999   33.90000    
+ 2000   36.70000    
+ 2001   36.70000    
+ 2002   38.90000    
+ 2003   37.80000    
+ 2004   39.40000    
+ 2005   35.60000    
+ 2006   40.00000    
+ 2007   38.90000    
+ 2008   38.90000    
+ 2009   41.10000    
+ 2010   36.70000    
+ 2011   35.60000    
+ 2012   38.90000    
+ 2013   36.10000    
+ 2014   37.20000    
+ 2015   39.40000    
+ 2016   37.80000    
+ 2017   40.60000    
+ 2018   37.80000    
+ 2019   36.70000    
+ 2020   37.80000    
+ 2021   46.70000    
+ 2022   38.90000    
+ 2023   42.20000    

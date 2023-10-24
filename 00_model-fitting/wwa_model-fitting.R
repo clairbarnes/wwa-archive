@@ -361,31 +361,15 @@ int_change <- function(mdl, rp = NA, cov, cov_cf, relative = F) {
 #'
 #' @export
 #'   
-plot_returnlevels <- function(mdl, cov, cov_cf, ev, ylim = NA, pch = 20, ylab = NA, legend_pos = "topright", main = "", xlim = c(1,10000), legend_labels = c("Present climate", "Counterfactual climate"),
-                              seed = 42, nsamp = 500, ...) {
+plot_returnlevels <- function(mdl, cov, cov_cf, ev, ylim = NA, pch = 20, ylab = NA, legend_pos = "topright", main = "", xlim = c(1,10000), legend_labels = c("Present climate", "Counterfactual climate"), seed = 42, nsamp = 500, ...) {
     
     x <- mdl$x
     if(missing(ev)) { ev <- mdl$ev }
     
     rp_x <- unique(c(seq(1.1,2,0.1), seq(2,100,1), seq(100,1000,10), seq(100,1000,100), seq(1000,10000,1000)))     # return periods at which to calculate values for curves
     rp_th <- 1/seq(1,0,length.out = length(x)+2)[2:(length(x)+1)]                                                  # quantiles to map against observations to check fit
-    
-    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    
-    # prep axes
-    if(is.na(ylim[1])) { ylim <- range(pretty(x)) }
-    if(is.na(ylab)) {ylab <- mdl$varnm}
-    # if((substr(mdl$varnm,1,3) == "log") & (ylim[1] <= 0)) { ylim[1] <- 0.01 }
-    
-    plot(0,type = "n", xlim = xlim, ylim = ylim, log = "x", xlab = "", ylab = "", main = main)
-    mtext("Return period (years)", side = 1, line = 2.5, cex = par("cex"))
-    mtext(ylab, side = 2, line = 2.5, cex = par("cex"))
-    
-    legend(legend_pos, legend = c(legend_labels, "Observed event"), col = c("firebrick", "blue", "magenta"), lty = 1, pch = c(pch,pch,NA), bty = "n")
 
-    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    
     # calculate return periods & return levels
     
     rl_curve_pres <- map_from_u(1/rp_x, mdl, fixed_cov = cov)
@@ -397,6 +381,20 @@ plot_returnlevels <- function(mdl, cov, cov_cf, ev, ylim = NA, pch = 20, ylab = 
     rp_event_pres <- 1/map_to_u(mdl, ev, fixed_cov = cov)
     rp_event_cf <- 1/map_to_u(mdl, ev, fixed_cov = cov_cf)
     
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # prep axes
+    
+    if(is.na(ylim[1])) { ylim <- range(pretty(c(x, rl_curve_pres, rl_curve_cf))) }
+    if(is.na(ylab)) {ylab <- mdl$varnm}
+    # if((substr(mdl$varnm,1,3) == "log") & (ylim[1] <= 0)) { ylim[1] <- 0.01 }
+    
+    # plot
+    plot(0,type = "n", xlim = xlim, ylim = ylim, log = "x", xlab = "", ylab = "", main = main)
+    mtext("Return period (years)", side = 1, line = 2.5, cex = par("cex"))
+    mtext(ylab, side = 2, line = 2.5, cex = par("cex"))
+    
+    legend(legend_pos, legend = c(legend_labels, "Observed event"), col = c("firebrick", "blue", "magenta"), lty = 1, pch = c(pch,pch,NA), bty = "n")
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     
     # return period curves

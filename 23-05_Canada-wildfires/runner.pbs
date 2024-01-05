@@ -1,0 +1,10 @@
+#PBS -J 0-8000
+#PBS -l select=1:ncpus=1:mem=100gb
+#PBS -l walltime=72:00:00 
+#PBS -N fwi_build_highres
+#PBS -p 1023
+##PBS -W depend=afterok:8005485
+
+source $HOME/anaconda3/bin/activate
+conda activate firepy
+python /rds/general/user/cb2714/home/23-05_canada-wildfires/fwi_build_highres.py

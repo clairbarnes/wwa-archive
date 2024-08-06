@@ -1,0 +1,13 @@
+# synthesis update 2021-12-15
+# Change in intensity, present-future, wsx3day, Earth, 10 yr
+# model chi2/dof =     0.9834    
+# model uncertainty is neglected
+ 2023 2050   0.460E-01  -0.650E-01   0.150      -0.650E-01   0.150      3 "EC-EARTH r12 HadREM3-GA7-05 () "
+ 2023 2050  -0.320E-01  -0.173       0.112      -0.173       0.112      3 "MPI-ESM-LR r1 ALADIN63 () "
+ 2023 2050   0.150E-01  -0.890E-01   0.132      -0.890E-01   0.132      3 "MPI-ESM-LR r1 CCLM4-8-17 () "
+ 2023 2050   0.100E-02  -0.127       0.129      -0.127       0.129      3 "MPI-ESM-LR r1 HadREM3-GA7-05 () "
+ 2023 2050  -0.870E-01  -0.192       0.250E-01  -0.192       0.250E-01  3 "MPI-ESM-LR r1 RACMO22E () "
+ 2023 2050   0.590E-01  -0.490E-01   0.174      -0.490E-01   0.174      3 "MPI-ESM-LR r1 REMO2009 () "
+ 2023 2050   0.670E-01  -0.310E-01   0.173      -0.310E-01   0.173      3 "MPI-ESM-LR r2 REMO2009 () "
+ 2023 2050   0.139E-01  -0.283E-01   0.578E-01  -0.283E-01   0.578E-01  4 "models "
+

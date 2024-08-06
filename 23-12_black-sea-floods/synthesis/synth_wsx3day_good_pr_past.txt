@@ -1,0 +1,18 @@
+# synthesis update 2021-12-15
+# Probability ratio, past-present, wsx3day, Earth, 10 yr
+# representation uncertainty (2&sigma;) factor     1.07    
+# model chi2/dof =      1.241    
+# model uncertainty (2&sigma;) factor     1.40    
+ 1900 2023   0.610       0.330        1.14       0.329        1.14      1 "ERA5 "
+ 1900 2023   0.641       0.851E-02   0.100E+05   0.851E-02   0.100E+05  1 "MSWX "
+ 1900 2023   0.625       0.529E-01    107        0.529E-01    107       2 "observations "
+ 1900 2023    1.03       0.541        2.20       0.498        2.36      3 "EC-EARTH r12 HadREM3-GA7-05 () "
+ 1900 2023   0.879       0.410        1.64       0.382        1.79      3 "MPI-ESM-LR r1 ALADIN63 () "
+ 1900 2023   0.976       0.580        1.96       0.525        2.11      3 "MPI-ESM-LR r1 CCLM4-8-17 () "
+ 1900 2023   0.702       0.339        1.25       0.314        1.36      3 "MPI-ESM-LR r1 HadREM3-GA7-05 () "
+ 1900 2023   0.655       0.305        1.16       0.284        1.27      3 "MPI-ESM-LR r1 RACMO22E () "
+ 1900 2023   0.944       0.541        1.64       0.493        1.80      3 "MPI-ESM-LR r1 REMO2009 () "
+ 1900 2023    2.19       0.991        4.16       0.925        4.52      3 "MPI-ESM-LR r2 REMO2009 () "
+ 1900 2023   0.961       0.630        1.45       0.630        1.45      4 "models "
+ 1900 2023   0.956       0.629        1.44       0.222        10.2      5 "synthesis "
+

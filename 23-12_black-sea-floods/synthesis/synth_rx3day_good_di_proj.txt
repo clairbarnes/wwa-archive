@@ -1,0 +1,20 @@
+# synthesis update 2021-12-15
+# Change in intensity, present-future, July-JunRX3day, Earth, 20 yr
+# model chi2/dof =     0.8204    
+# model uncertainty is neglected
+ 2023 2050    2.46      -0.158        4.87      -0.158        4.87      3 "ACCESS-ESM1-5 ssp585 r1i1p1f1 () "
+ 2023 2050    3.51        1.72        5.12        1.72        5.12      3 "CanESM5 ssp585 r1i1p1f1 () "
+ 2023 2050    3.20        1.47        4.87        1.47        4.87      3 "CMCC-CM2-SR5 ssp585 r1i1p1f1 () "
+ 2023 2050    4.91        2.75        6.91        2.75        6.91      3 "EC-Earth3 ssp585 r1i1p1f1 () "
+ 2023 2050    5.17        3.08        7.25        3.08        7.25      3 "EC-Earth3-Veg ssp585 r1i1p1f1 () "
+ 2023 2050    3.09      -0.123        6.40      -0.123        6.40      3 "EC-Earth3-Veg-LR ssp585 r1i1p1f1 () "
+ 2023 2050    3.21       0.836        5.85       0.836        5.85      3 "GFDL-CM4 ssp585 r1i1p1f1 () "
+ 2023 2050    1.92       -1.54        5.24       -1.54        5.24      3 "GFDL-ESM4 ssp585 r1i1p1f1 () "
+ 2023 2050    5.18       0.894        8.71       0.894        8.71      3 "INM-CM4-8 ssp585 r1i1p1f1 () "
+ 2023 2050    2.58       0.736        4.48       0.736        4.48      3 "KACE-1-0-G ssp585 r1i1p1f1 () "
+ 2023 2050    4.33        1.67        6.96        1.67        6.96      3 "MPI-ESM1-2-HR ssp585 r1i1p1f1 () "
+ 2023 2050    3.54        1.13        5.77        1.13        5.77      3 "MPI-ESM1-2-LR ssp585 r1i1p1f1 () "
+ 2023 2050    1.62       -1.31        4.54       -1.31        4.54      3 "NorESM2-LM ssp585 r1i1p1f1 () "
+ 2023 2050    5.43        2.34        8.57        2.34        8.57      3 "CNRM-CM5 rcp85 r1i1p1 RegCM4-6 () "
+ 2023 2050    4.33       0.922        7.43       0.922        7.43      3 "EC-EARTH rcp85 r12i1p1 WRF381P () "
+ 2023 2050    3.61        2.98        4.21        2.98        4.21      4 "models "
